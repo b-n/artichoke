@@ -126,6 +126,18 @@ task :test do
   sh 'cargo test --workspace'
 end
 
+namespace :test do
+  desc 'Generate HTML test coverage report'
+  task :'coverage:html' do
+    sh 'cargo tarpaulin --workspace --output-dir coverage -o html'
+  end
+
+  desc 'Generate XML test coverage report'
+  task :'coverage:xml' do
+    sh 'cargo tarpaulin --workspace --output-dir coverage -o xml'
+  end
+end
+
 desc 'Run Artichoke with LeakSanitizer'
 task :'sanitizer:leak' do
   ENV['RUSTFLAGS'] = '-Z sanitizer=leak'
