@@ -15,7 +15,7 @@ impl Time {
     ///
     /// ```
     /// use spinoso_time::{tzrs::Time, NANOS_IN_SECOND};
-    /// let t = Time::utc(2022, 1, 1, 12, 0, 0, 1);
+    /// let t = Time::utc(2022, 1, 1, 12, 0, 0, 1).unwrap();
     /// let t_float = t.to_float();
     /// let float_nanos = (t_float - t_float.round()) * NANOS_IN_SECOND as f64;
     /// assert_ne!(float_nanos, 1f64);
@@ -38,7 +38,7 @@ impl Time {
     ///
     /// ```
     /// use spinoso_time::{tzrs::Time, MICROS_IN_NANO};
-    /// let t = Time::utc(2022, 1, 1, 12, 0, 0, 1 * MICROS_IN_NANO);
+    /// let t = Time::utc(2022, 1, 1, 12, 0, 0, 1 * MICROS_IN_NANO).unwrap();
     /// assert_eq!(t.microseconds(), 1);
     /// ```
     ///
@@ -60,7 +60,7 @@ impl Time {
     ///
     /// ```
     /// use spinoso_time::tzrs::Time;
-    /// let now = Time::utc(2022, 7, 8, 12, 34, 56, 0);
+    /// let now = Time::utc(2022, 7, 8, 12, 34, 56, 0).unwrap();
     /// let second_of_minute = now.second();
     /// assert_eq!(second_of_minute, 56);
     /// ```
@@ -81,7 +81,7 @@ impl Time {
     ///
     /// ```
     /// use spinoso_time::tzrs::Time;
-    /// let now = Time::utc(2022, 7, 8, 12, 34, 56, 0);
+    /// let now = Time::utc(2022, 7, 8, 12, 34, 56, 0).unwrap();
     /// let minute_of_hour = now.minute();
     /// assert_eq!(minute_of_hour, 34);
     /// ```
@@ -101,7 +101,7 @@ impl Time {
     ///
     /// ```
     /// use spinoso_time::tzrs::Time;
-    /// let now = Time::utc(2022, 7, 8, 12, 34, 56, 0);
+    /// let now = Time::utc(2022, 7, 8, 12, 34, 56, 0).unwrap();
     /// let hour_of_day = now.hour();
     /// assert_eq!(hour_of_day, 12);
     /// ```
@@ -121,7 +121,7 @@ impl Time {
     ///
     /// ```
     /// use spinoso_time::tzrs::Time;
-    /// let now = Time::utc(2022, 7, 8, 12, 34, 56, 0);
+    /// let now = Time::utc(2022, 7, 8, 12, 34, 56, 0).unwrap();
     /// let day_of_month = now.day();
     /// assert_eq!(day_of_month, 8);
     /// ```
@@ -142,7 +142,7 @@ impl Time {
     ///
     /// ```
     /// use spinoso_time::tzrs::Time;
-    /// let now = Time::utc(2022, 7, 8, 12, 34, 56, 0);
+    /// let now = Time::utc(2022, 7, 8, 12, 34, 56, 0).unwrap();
     /// let month_of_year = now.month();
     /// assert_eq!(month_of_year, 7);
     /// ```
@@ -163,7 +163,7 @@ impl Time {
     ///
     /// ```
     /// use spinoso_time::tzrs::Time;
-    /// let now = Time::utc(2022, 7, 8, 12, 34, 56, 0);
+    /// let now = Time::utc(2022, 7, 8, 12, 34, 56, 0).unwrap();
     /// assert_eq!(now.year(), 2022);
     /// ```
     ///
@@ -176,13 +176,10 @@ impl Time {
 
     /// Returns the name of the time zone as a string
     ///
-    /// Note: UTC is an empty string due to the [`UTC LocaleTimeType`] being constructed with None,
-    /// which is later coerced into an [`empty string`]
-    ///
     /// # Examples
     /// ```
     /// use spinoso_time::tzrs::Time;
-    /// let now_utc = Time::utc(2022, 7, 8, 12, 34, 56, 0);
+    /// let now_utc = Time::utc(2022, 7, 8, 12, 34, 56, 0).unwrap();
     /// assert_eq!("UTC", now_utc.time_zone());
     /// ```
     ///
@@ -204,7 +201,7 @@ impl Time {
     //// # Examples
     /// ```
     /// use spinoso_time::tzrs::Time;
-    /// let now_utc = Time::utc(2022, 7, 8, 12, 34, 56, 0);
+    /// let now_utc = Time::utc(2022, 7, 8, 12, 34, 56, 0).unwrap();
     /// assert!(now_utc.is_utc());
     /// ```
     ///
@@ -224,7 +221,7 @@ impl Time {
     ///
     /// ```
     /// use spinoso_time::tzrs::Time;
-    /// let now = Time::utc(2022, 7, 8, 12, 34, 56, 0);
+    /// let now = Time::utc(2022, 7, 8, 12, 34, 56, 0).unwrap();
     /// assert_eq!(now.utc_offset(), 0);
     /// ```
     ///
@@ -245,9 +242,9 @@ impl Time {
     /// ```
     /// use spinoso_time::tzrs::{Time, Offset};
     /// use tzdb::time_zone::{europe::AMSTERDAM, pacific::AUCKLAND};
-    /// let now_ams = Time::new(2022, 5, 18, 16, 0, 0, 0, Offset::from(AMSTERDAM));
+    /// let now_ams = Time::new(2022, 5, 18, 16, 0, 0, 0, Offset::from(AMSTERDAM)).unwrap();
     /// assert!(now_ams.is_dst());
-    /// let now_auckland = Time::new(2022, 5, 18, 16, 0, 0, 0, Offset::from(AUCKLAND));
+    /// let now_auckland = Time::new(2022, 5, 18, 16, 0, 0, 0, Offset::from(AUCKLAND)).unwrap();
     /// assert!(!now_auckland.is_dst());
     /// ```
     ///
@@ -267,7 +264,7 @@ impl Time {
     ///
     /// ```
     /// use spinoso_time::tzrs::Time;
-    /// let now = Time::utc(2022, 7, 8, 12, 34, 56, 0);
+    /// let now = Time::utc(2022, 7, 8, 12, 34, 56, 0).unwrap();
     /// assert_eq!(now.day_of_week(), 5);
     /// ```
     ///
@@ -286,7 +283,7 @@ impl Time {
     ///
     /// ```
     /// use spinoso_time::tzrs::Time;
-    /// let now = Time::utc(2022, 7, 8, 12, 34, 56, 0);
+    /// let now = Time::utc(2022, 7, 8, 12, 34, 56, 0).unwrap();
     /// assert_eq!(now.day_of_year(), 188);
     /// ```
     ///
@@ -304,7 +301,7 @@ mod tests {
 
     #[test]
     fn all_parts() {
-        let dt = Time::utc(2022, 7, 8, 12, 34, 56, 1910);
+        let dt = Time::utc(2022, 7, 8, 12, 34, 56, 1910).unwrap();
         assert_eq!(2022, dt.year());
         assert_eq!(7, dt.month());
         assert_eq!(8, dt.day());

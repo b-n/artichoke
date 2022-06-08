@@ -1,7 +1,21 @@
+use core::fmt;
+use std::error;
+
 use regex::Regex;
 use tz::timezone::{LocalTimeType, TimeZoneRef};
 use tzdb::local_tz;
 use tzdb::time_zone::etc::GMT;
+
+#[derive(Debug, Clone)]
+pub struct TzStringError(String);
+
+impl fmt::Display for TzStringError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        write!(f, "invalid timezone {}", self.0)
+    }
+}
+
+impl error::Error for TzStringError {}
 
 const SECONDS_IN_MINUTE: i32 = 60;
 const SECONDS_IN_HOUR: i32 = SECONDS_IN_MINUTE * 60;
@@ -115,7 +129,9 @@ impl<'a> Offset {
     }
 }
 
-impl From<&str> for Offset {
+impl TryFrom<&str> for Offset {
+    type Error = TzStringError;
+
     /// Construct a Offset based on the [accepted MRI values]
     ///
     /// Accepts:
@@ -128,34 +144,33 @@ impl From<&str> for Offset {
     ///
     /// [accepted MRI values]: https://ruby-doc.org/core-2.6.3/Time.html#method-c-new
     #[inline]
-    #[must_use]
-    fn from(input: &str) -> Self {
+    fn try_from(input: &str) -> Result<Self, Self::Error> {
         match input {
-            "A" => Self::fixed(1),
-            "B" => Self::fixed(2),
-            "C" => Self::fixed(3),
-            "D" => Self::fixed(4),
-            "E" => Self::fixed(5),
-            "F" => Self::fixed(6),
-            "G" => Self::fixed(7),
-            "H" => Self::fixed(8),
-            "I" => Self::fixed(9),
-            "K" => Self::fixed(10),
-            "L" => Self::fixed(11),
-            "M" => Self::fixed(12),
-            "N" => Self::fixed(-1),
-            "O" => Self::fixed(-2),
-            "P" => Self::fixed(-3),
-            "Q" => Self::fixed(-4),
-            "R" => Self::fixed(-5),
-            "S" => Self::fixed(-6),
-            "T" => Self::fixed(-7),
-            "U" => Self::fixed(-8),
-            "V" => Self::fixed(-9),
-            "W" => Self::fixed(-10),
-            "X" => Self::fixed(-11),
-            "Y" => Self::fixed(-12),
-            "Z" => Self::utc(),
+            "A" => Ok(Self::fixed(1)),
+            "B" => Ok(Self::fixed(2)),
+            "C" => Ok(Self::fixed(3)),
+            "D" => Ok(Self::fixed(4)),
+            "E" => Ok(Self::fixed(5)),
+            "F" => Ok(Self::fixed(6)),
+            "G" => Ok(Self::fixed(7)),
+            "H" => Ok(Self::fixed(8)),
+            "I" => Ok(Self::fixed(9)),
+            "K" => Ok(Self::fixed(10)),
+            "L" => Ok(Self::fixed(11)),
+            "M" => Ok(Self::fixed(12)),
+            "N" => Ok(Self::fixed(-1)),
+            "O" => Ok(Self::fixed(-2)),
+            "P" => Ok(Self::fixed(-3)),
+            "Q" => Ok(Self::fixed(-4)),
+            "R" => Ok(Self::fixed(-5)),
+            "S" => Ok(Self::fixed(-6)),
+            "T" => Ok(Self::fixed(-7)),
+            "U" => Ok(Self::fixed(-8)),
+            "V" => Ok(Self::fixed(-9)),
+            "W" => Ok(Self::fixed(-10)),
+            "X" => Ok(Self::fixed(-11)),
+            "Y" => Ok(Self::fixed(-12)),
+            "Z" | "UTC" => Ok(Self::utc()),
             _ => {
                 lazy_static! {
                     static ref HH_MM_MATCHER: Regex = Regex::new(r"^([\-\+]{1})(\d{2})(\d{2})$").unwrap();
@@ -168,19 +183,20 @@ impl From<&str> for Offset {
                     let minutes = caps.get(3).unwrap().as_str().parse::<i32>().unwrap();
 
                     let offset_seconds: i32 = sign * ((hours * SECONDS_IN_HOUR) + (minutes * SECONDS_IN_MINUTE));
-                    Self::fixed(offset_seconds)
+                    Ok(Self::fixed(offset_seconds))
                 } else {
-                    // TODO: ArgumentError
-                    Self::utc()
+                    Err(TzStringError(input.to_string()))
                 }
             }
         }
     }
 }
 
-impl From<String> for Offset {
-    fn from(input: String) -> Self {
-        Offset::from(input.as_str())
+impl TryFrom<String> for Offset {
+    type Error = TzStringError;
+
+    fn try_from(input: String) -> Result<Self, Self::Error> {
+        Offset::try_from(input.as_str())
     }
 }
 
@@ -206,7 +222,7 @@ mod tests {
     use super::*;
 
     fn offset_seconds_from_fixed_offset(input: &str) -> i32 {
-        let offset = Offset::from(input);
+        let offset = Offset::try_from(input).unwrap();
         let local_time_type = offset.time_zone_ref().local_time_types()[0];
         local_time_type.ut_offset()
     }
@@ -227,7 +243,7 @@ mod tests {
 
     #[test]
     fn z_is_utc() {
-        let offset = Offset::from("Z");
+        let offset = Offset::try_from("Z").unwrap();
         assert!(matches!(offset, Offset::Utc));
     }
 
