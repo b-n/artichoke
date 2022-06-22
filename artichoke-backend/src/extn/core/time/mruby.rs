@@ -4,7 +4,6 @@ use std::ffi::CStr;
 
 use crate::extn::core::time::{self, trampoline};
 use crate::extn::prelude::*;
-use crate::types::Ruby;
 
 const TIME_CSTR: &CStr = qed::const_cstr_from_str!("Time\0");
 
@@ -20,7 +19,7 @@ pub fn init(interp: &mut Artichoke) -> InitializeResult<()> {
         .value_is_rust_object()
         // Constructor
         .add_self_method("now", time_self_now, sys::mrb_args_none())?
-        .add_self_method("at", time_self_at, sys::mrb_args_req(1))?
+        .add_self_method("at", time_self_at, sys::mrb_args_rest())?
         .add_self_method("utc", time_self_mkutc, sys::mrb_args_any())?
         .add_self_method("gm", time_self_mkutc, sys::mrb_args_any())?
         .add_self_method("local", time_self_mktime, sys::mrb_args_any())?
@@ -117,22 +116,11 @@ unsafe extern "C" fn time_self_at(mrb: *mut sys::mrb_state, _slf: sys::mrb_value
     unwrap_interpreter!(mrb, to => guard);
     let seconds = Value::from(seconds);
 
-    // If a hash is provided as the last argument, assume that it is the options
-    let (subsec, subsec_type, options) = match (opt1.map(Value::from), opt2.map(Value::from), opt3.map(Value::from)) {
-        (None, None, None) => (None, None, None),
-        (Some(opt1), None, None) => match opt1.ruby_type() {
-            Ruby::Hash => (None, None, Some(opt1)),
-            _ => (Some(opt1), None, None),
-        },
-        (Some(opt1), Some(opt2), None) => match (opt1.ruby_type(), opt2.ruby_type()) {
-            (_, Ruby::Hash) => (Some(opt1), None, Some(opt2)),
-            (_, _) => (Some(opt1), Some(opt2), None),
-        },
-        (Some(opt1), Some(opt2), Some(opt3)) => (Some(opt1), Some(opt2), Some(opt3)),
-        _ => unreachable!("mrb_get_args should have raised"),
-    };
+    let opt1 = opt1.map(Value::from);
+    let opt2 = opt2.map(Value::from);
+    let opt3 = opt3.map(Value::from);
 
-    let result = trampoline::at(&mut guard, seconds, subsec, subsec_type, options);
+    let result = trampoline::at(&mut guard, seconds, opt1, opt2, opt3);
     match result {
         Ok(value) => value.inner(),
         Err(exception) => error::raise(guard, exception),

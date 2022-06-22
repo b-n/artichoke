@@ -3,7 +3,7 @@
 use spinoso_time::MICROS_IN_NANO;
 
 use crate::convert::implicitly_convert_to_int;
-use crate::extn::core::time::{Time, Offset};
+use crate::extn::core::time::{Offset, Time};
 use crate::extn::prelude::*;
 
 use bstr::ByteVec;
@@ -31,8 +31,8 @@ fn subsec_multiplier(interp: &mut Artichoke, subsec_type: Option<Value>) -> Resu
             } else {
                 Err(ArgumentError::with_message("unexpected unit. expects :milliseconds, :usec, :nsec").into())
             }
-        },
-        None => Ok(MICROS_IN_NANO as i64)
+        }
+        None => Ok(MICROS_IN_NANO as i64),
     }
 }
 
@@ -43,7 +43,31 @@ pub fn now(interp: &mut Artichoke) -> Result<Value, Error> {
     Ok(result)
 }
 
-pub fn at(interp: &mut Artichoke, seconds: Value, subsec: Option<Value>, subsec_type: Option<Value>, options: Option<Value>) -> Result<Value, Error> {
+pub fn at(
+    interp: &mut Artichoke,
+    seconds: Value,
+    opt1: Option<Value>,
+    opt2: Option<Value>,
+    opt3: Option<Value>,
+) -> Result<Value, Error> {
+    let (subsec, subsec_type, options) = match (
+        opt1.and_then(|opt| Some(opt.ruby_type())),
+        opt2.and_then(|opt| Some(opt.ruby_type())),
+        opt3.and_then(|opt| Some(opt.ruby_type())),
+    ) {
+        (None, None, None) => (None, None, None),
+        (Some(Ruby::Hash), None, None) => (None, None, opt1),
+        (Some(Ruby::Fixnum), None, None) => (opt1, None, None),
+        (Some(_), None, None) => Err(ArgumentError::with_message("expected a number"))?,
+        (Some(Ruby::Fixnum), Some(Ruby::Hash), None) => (opt1, None, opt2),
+        (Some(Ruby::Fixnum), Some(Ruby::Symbol), None) => (opt1, opt2, None),
+        (Some(Ruby::Fixnum), Some(_), None) => Err(ArgumentError::with_message(
+            "expected one of [:milliseconds, :usec, :nsec]",
+        ))?,
+        (Some(Ruby::Fixnum), Some(Ruby::Symbol), Some(Ruby::Hash)) => (opt1, opt2, opt3),
+        _ => Err(ArgumentError::with_message("invalid arguments"))?,
+    };
+
     let _ = options;
     let seconds = implicitly_convert_to_int(interp, seconds)?;
 
@@ -57,7 +81,7 @@ pub fn at(interp: &mut Artichoke, seconds: Value, subsec: Option<Value>, subsec_
         match subsec {
             0..=MAX_NANOS => Ok(subsec as u32),
             i64::MIN..=-1 => Err(ArgumentError::with_message("subseconds needs to be > 0")),
-            _ => Err(ArgumentError::with_message("subseconds outside of range"))
+            _ => Err(ArgumentError::with_message("subseconds outside of range")),
         }?
     } else {
         0
@@ -178,7 +202,8 @@ pub fn mutate_to_local(interp: &mut Artichoke, time: Value, offset: Option<Value
 
 pub fn mutate_to_utc(interp: &mut Artichoke, mut time: Value) -> Result<Value, Error> {
     let mut obj = unsafe { Time::unbox_from_value(&mut time, interp)? };
-    obj.set_utc().map_err(|_| ArgumentError::with_message("could not convert to utc"))?;
+    obj.set_utc()
+        .map_err(|_| ArgumentError::with_message("could not convert to utc"))?;
     Ok(time)
 }
 
@@ -191,7 +216,9 @@ pub fn as_local(interp: &mut Artichoke, time: Value, offset: Option<Value>) -> R
 
 pub fn as_utc(interp: &mut Artichoke, mut time: Value) -> Result<Value, Error> {
     let time = unsafe { Time::unbox_from_value(&mut time, interp)? };
-    let utc = time.to_utc().map_err(|_| ArgumentError::with_message("could not convert to utc"))?;
+    let utc = time
+        .to_utc()
+        .map_err(|_| ArgumentError::with_message("could not convert to utc"))?;
     Time::alloc_value(utc, interp)
 }
 
@@ -232,15 +259,15 @@ pub fn minus(interp: &mut Artichoke, time: Value, other: Value) -> Result<Value,
 
     //let time = unsafe { Time::unbox_from_value(&mut time, interp)? };
     //let other = if let Ok(other) = unsafe { Time::unbox_from_value(&mut other, interp) } {
-        //other
+    //other
     //} else if let Ok(other) = implicitly_convert_to_int(interp, other) {
-        //let _ = other;
-        //return Err(NotImplementedError::with_message("Time#- with Integer argument is not implemented").into());
+    //let _ = other;
+    //return Err(NotImplementedError::with_message("Time#- with Integer argument is not implemented").into());
     //} else if let Ok(other) = other.try_convert_into::<f64>(interp) {
-        //let _ = other;
-        //return Err(NotImplementedError::with_message("Time#- with Float argument is not implemented").into());
+    //let _ = other;
+    //return Err(NotImplementedError::with_message("Time#- with Float argument is not implemented").into());
     //} else {
-        //return Err(TypeError::with_message("can't convert into an exact number").into());
+    //return Err(TypeError::with_message("can't convert into an exact number").into());
     //};
     //let difference = time.sub(*other);
     //interp.try_convert_mut(difference)
