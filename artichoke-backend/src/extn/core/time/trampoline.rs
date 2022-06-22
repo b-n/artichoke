@@ -3,28 +3,79 @@
 use spinoso_time::MICROS_IN_NANO;
 
 use crate::convert::implicitly_convert_to_int;
-use crate::extn::core::time::Time;
+use crate::extn::core::time::{Time, Offset};
 use crate::extn::prelude::*;
 
-// Constructor
+use bstr::ByteVec;
 
+const MAX_NANOS: i64 = 1_000_000_000 - 1;
+
+// Generate a subsecond multiplier from the given ruby value
+//
+// - If not provided, the defaults to Micros
+// - Otherwise, expects a symbolw with :milliseconds, :usec, or :nsec
+fn subsec_multiplier(interp: &mut Artichoke, subsec_type: Option<Value>) -> Result<i64, Error> {
+    match subsec_type {
+        Some(subsec_type) => {
+            if subsec_type.ruby_type() == Ruby::Symbol {
+                let subsec_symbol = subsec_type.to_s(interp);
+                if subsec_symbol == Vec::from_slice(b"milliseconds") {
+                    Ok(1_000_000)
+                } else if subsec_symbol == Vec::from_slice(b"usec") {
+                    Ok(1_000)
+                } else if subsec_symbol == Vec::from_slice(b"nsec") {
+                    Ok(1)
+                } else {
+                    Err(ArgumentError::with_message("unexpected unit. expects :milliseconds, :usec, :nsec").into())
+                }
+            } else {
+                Err(ArgumentError::with_message("unexpected unit. expects :milliseconds, :usec, :nsec").into())
+            }
+        },
+        None => Ok(MICROS_IN_NANO as i64)
+    }
+}
+
+// Constructor
 pub fn now(interp: &mut Artichoke) -> Result<Value, Error> {
-    let now = Time::now();
+    let now = Time::now().map_err(|_| StandardError::with_message("now is not available"))?;
     let result = Time::alloc_value(now, interp)?;
     Ok(result)
 }
 
-pub fn at(interp: &mut Artichoke, seconds: Value, microseconds: Option<Value>) -> Result<Value, Error> {
+pub fn at(interp: &mut Artichoke, seconds: Value, subsec: Option<Value>, subsec_type: Option<Value>, options: Option<Value>) -> Result<Value, Error> {
+    let _ = options;
     let seconds = implicitly_convert_to_int(interp, seconds)?;
-    let sub_second_nanos = if let Some(microseconds) = microseconds {
-        implicitly_convert_to_int(interp, microseconds)?
-            .checked_mul(i64::from(MICROS_IN_NANO))
-            .ok_or_else(|| ArgumentError::with_message("Time too large"))?
+
+    let subsec_nanos = if let Some(subsec) = subsec {
+        let subsec_multiplier = subsec_multiplier(interp, subsec_type)?;
+        let subsec = implicitly_convert_to_int(interp, subsec)?
+            .checked_mul(subsec_multiplier)
+            .ok_or_else(|| ArgumentError::with_message("Time too large"))?;
+
+        // checks to see if the value is inside the valid nanos range of 0..=1_000_000_000
+        match subsec {
+            0..=MAX_NANOS => Ok(subsec as u32),
+            i64::MIN..=-1 => Err(ArgumentError::with_message("subseconds needs to be > 0")),
+            _ => Err(ArgumentError::with_message("subseconds outside of range"))
+        }?
     } else {
-        0_i64
+        0
     };
 
-    if let Some(time) = Time::at(seconds, sub_second_nanos) {
+    let offset = if let Some(options) = options {
+        if options.ruby_type() == Ruby::Hash {
+            let hash: Vec<(Value, Value)> = interp.try_convert_mut(options)?;
+            println!("{:?}", hash);
+            Ok(Offset::from(0))
+        } else {
+            Err(ArgumentError::with_message("unknown keyword"))
+        }?
+    } else {
+        Offset::local()
+    };
+
+    if let Ok(time) = Time::with_timespec_and_offset(seconds, subsec_nanos, offset) {
         let result = Time::alloc_value(time, interp)?;
         Ok(result)
     } else {
@@ -127,7 +178,7 @@ pub fn mutate_to_local(interp: &mut Artichoke, time: Value, offset: Option<Value
 
 pub fn mutate_to_utc(interp: &mut Artichoke, mut time: Value) -> Result<Value, Error> {
     let mut obj = unsafe { Time::unbox_from_value(&mut time, interp)? };
-    *obj = obj.to_utc();
+    obj.set_utc().map_err(|_| ArgumentError::with_message("could not convert to utc"))?;
     Ok(time)
 }
 
@@ -140,7 +191,7 @@ pub fn as_local(interp: &mut Artichoke, time: Value, offset: Option<Value>) -> R
 
 pub fn as_utc(interp: &mut Artichoke, mut time: Value) -> Result<Value, Error> {
     let time = unsafe { Time::unbox_from_value(&mut time, interp)? };
-    let utc = time.to_utc();
+    let utc = time.to_utc().map_err(|_| ArgumentError::with_message("could not convert to utc"))?;
     Time::alloc_value(utc, interp)
 }
 
@@ -152,23 +203,9 @@ pub fn asctime(interp: &mut Artichoke, time: Value) -> Result<Value, Error> {
     Err(NotImplementedError::new().into())
 }
 
-pub fn to_string(interp: &mut Artichoke, time: Value) -> Result<Value, Error> {
-    let _ = time;
-    // XXX: This function is used to implement `Time#inspect`. Raising in an
-    // `#inspect` implementation interacts poorly with the locals table when
-    // running Artichoke in a REPL.
-    //
-    // Rather than fix this, which will involve deep diving into mruby, work
-    // around this by returning a `String` that says `Time#inspect` is not
-    // implemented. This allows us to uphold the API contract without
-    // implementing `strftime`.
-    //
-    // This hack replaces this code:
-    //
-    // ```rust
-    // Err(NotImplementedError::new().into())
-    // ```
-    interp.try_convert_mut("Time<Time#inspect is not implemented>")
+pub fn to_string(interp: &mut Artichoke, mut time: Value) -> Result<Value, Error> {
+    let time = unsafe { Time::unbox_from_value(&mut time, interp)? };
+    interp.try_convert_mut(time.to_string())
 }
 
 pub fn to_array(interp: &mut Artichoke, time: Value) -> Result<Value, Error> {
@@ -187,30 +224,39 @@ pub fn plus(interp: &mut Artichoke, time: Value, other: Value) -> Result<Value, 
     Err(NotImplementedError::new().into())
 }
 
-pub fn minus(interp: &mut Artichoke, mut time: Value, mut other: Value) -> Result<Value, Error> {
-    let time = unsafe { Time::unbox_from_value(&mut time, interp)? };
-    let other = if let Ok(other) = unsafe { Time::unbox_from_value(&mut other, interp) } {
-        other
-    } else if let Ok(other) = implicitly_convert_to_int(interp, other) {
-        let _ = other;
-        return Err(NotImplementedError::with_message("Time#- with Integer argument is not implemented").into());
-    } else if let Ok(other) = other.try_convert_into::<f64>(interp) {
-        let _ = other;
-        return Err(NotImplementedError::with_message("Time#- with Float argument is not implemented").into());
-    } else {
-        return Err(TypeError::with_message("can't convert into an exact number").into());
-    };
-    let difference = time.difference(*other);
-    interp.try_convert_mut(difference)
+pub fn minus(interp: &mut Artichoke, time: Value, other: Value) -> Result<Value, Error> {
+    let _ = interp;
+    let _ = time;
+    let _ = other;
+    Err(NotImplementedError::new().into())
+
+    //let time = unsafe { Time::unbox_from_value(&mut time, interp)? };
+    //let other = if let Ok(other) = unsafe { Time::unbox_from_value(&mut other, interp) } {
+        //other
+    //} else if let Ok(other) = implicitly_convert_to_int(interp, other) {
+        //let _ = other;
+        //return Err(NotImplementedError::with_message("Time#- with Integer argument is not implemented").into());
+    //} else if let Ok(other) = other.try_convert_into::<f64>(interp) {
+        //let _ = other;
+        //return Err(NotImplementedError::with_message("Time#- with Float argument is not implemented").into());
+    //} else {
+        //return Err(TypeError::with_message("can't convert into an exact number").into());
+    //};
+    //let difference = time.sub(*other);
+    //interp.try_convert_mut(difference)
 }
 
 // Coarse math
 
-pub fn succ(interp: &mut Artichoke, mut time: Value) -> Result<Value, Error> {
-    interp.warn(b"warning: Time#succ is obsolete; use time + 1")?;
-    let time = unsafe { Time::unbox_from_value(&mut time, interp)? };
-    let next = time.succ();
-    Time::alloc_value(next, interp)
+pub fn succ(interp: &mut Artichoke, time: Value) -> Result<Value, Error> {
+    let _ = interp;
+    let _ = time;
+    Err(NotImplementedError::new().into())
+
+    //interp.warn(b"warning: Time#succ is obsolete; use time + 1")?;
+    //let time = unsafe { Time::unbox_from_value(&mut time, interp)? };
+    //let next = time + 1;
+    //Time::alloc_value(next, interp)
 }
 
 pub fn round(interp: &mut Artichoke, time: Value, num_digits: Option<Value>) -> Result<Value, Error> {
@@ -266,14 +312,14 @@ pub fn year(interp: &mut Artichoke, mut time: Value) -> Result<Value, Error> {
 
 pub fn weekday(interp: &mut Artichoke, mut time: Value) -> Result<Value, Error> {
     let time = unsafe { Time::unbox_from_value(&mut time, interp)? };
-    let weekday = time.weekday();
+    let weekday = time.day_of_week();
     let result = interp.convert(weekday);
     Ok(result)
 }
 
 pub fn year_day(interp: &mut Artichoke, mut time: Value) -> Result<Value, Error> {
     let time = unsafe { Time::unbox_from_value(&mut time, interp)? };
-    let year_day = time.year_day();
+    let year_day = time.day_of_year();
     let result = interp.convert(year_day);
     Ok(result)
 }
@@ -308,49 +354,49 @@ pub fn is_utc(interp: &mut Artichoke, mut time: Value) -> Result<Value, Error> {
 
 pub fn is_sunday(interp: &mut Artichoke, mut time: Value) -> Result<Value, Error> {
     let time = unsafe { Time::unbox_from_value(&mut time, interp)? };
-    let is_sunday = time.is_sunday();
+    let is_sunday = time.day_of_week() == 0;
     let result = interp.convert(is_sunday);
     Ok(result)
 }
 
 pub fn is_monday(interp: &mut Artichoke, mut time: Value) -> Result<Value, Error> {
     let time = unsafe { Time::unbox_from_value(&mut time, interp)? };
-    let is_monday = time.is_monday();
+    let is_monday = time.day_of_week() == 1;
     let result = interp.convert(is_monday);
     Ok(result)
 }
 
 pub fn is_tuesday(interp: &mut Artichoke, mut time: Value) -> Result<Value, Error> {
     let time = unsafe { Time::unbox_from_value(&mut time, interp)? };
-    let is_tuesday = time.is_tuesday();
+    let is_tuesday = time.day_of_week() == 2;
     let result = interp.convert(is_tuesday);
     Ok(result)
 }
 
 pub fn is_wednesday(interp: &mut Artichoke, mut time: Value) -> Result<Value, Error> {
     let time = unsafe { Time::unbox_from_value(&mut time, interp)? };
-    let is_wednesday = time.is_wednesday();
+    let is_wednesday = time.day_of_week() == 3;
     let result = interp.convert(is_wednesday);
     Ok(result)
 }
 
 pub fn is_thursday(interp: &mut Artichoke, mut time: Value) -> Result<Value, Error> {
     let time = unsafe { Time::unbox_from_value(&mut time, interp)? };
-    let is_thursday = time.is_thursday();
+    let is_thursday = time.day_of_week() == 4;
     let result = interp.convert(is_thursday);
     Ok(result)
 }
 
 pub fn is_friday(interp: &mut Artichoke, mut time: Value) -> Result<Value, Error> {
     let time = unsafe { Time::unbox_from_value(&mut time, interp)? };
-    let is_friday = time.is_friday();
+    let is_friday = time.day_of_week() == 5;
     let result = interp.convert(is_friday);
     Ok(result)
 }
 
 pub fn is_saturday(interp: &mut Artichoke, mut time: Value) -> Result<Value, Error> {
     let time = unsafe { Time::unbox_from_value(&mut time, interp)? };
-    let is_saturday = time.is_saturday();
+    let is_saturday = time.day_of_week() == 6;
     let result = interp.convert(is_saturday);
     Ok(result)
 }
@@ -359,14 +405,14 @@ pub fn is_saturday(interp: &mut Artichoke, mut time: Value) -> Result<Value, Err
 
 pub fn microsecond(interp: &mut Artichoke, mut time: Value) -> Result<Value, Error> {
     let time = unsafe { Time::unbox_from_value(&mut time, interp)? };
-    let microsecond = time.microsecond();
+    let microsecond = time.microseconds();
     let result = interp.convert(microsecond);
     Ok(result)
 }
 
 pub fn nanosecond(interp: &mut Artichoke, mut time: Value) -> Result<Value, Error> {
     let time = unsafe { Time::unbox_from_value(&mut time, interp)? };
-    let nanosecond = time.nanosecond();
+    let nanosecond = time.nanoseconds();
     let result = interp.convert(nanosecond);
     Ok(result)
 }

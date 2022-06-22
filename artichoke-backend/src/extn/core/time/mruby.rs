@@ -4,6 +4,7 @@ use std::ffi::CStr;
 
 use crate::extn::core::time::{self, trampoline};
 use crate::extn::prelude::*;
+use crate::types::Ruby;
 
 const TIME_CSTR: &CStr = qed::const_cstr_from_str!("Time\0");
 
@@ -112,11 +113,26 @@ unsafe extern "C" fn time_self_now(mrb: *mut sys::mrb_state, _slf: sys::mrb_valu
 }
 
 unsafe extern "C" fn time_self_at(mrb: *mut sys::mrb_state, _slf: sys::mrb_value) -> sys::mrb_value {
-    let (seconds, microseconds) = mrb_get_args!(mrb, required = 1, optional = 1);
+    let (seconds, opt1, opt2, opt3) = mrb_get_args!(mrb, required = 1, optional = 3);
     unwrap_interpreter!(mrb, to => guard);
     let seconds = Value::from(seconds);
-    let microseconds = microseconds.map(Value::from);
-    let result = trampoline::at(&mut guard, seconds, microseconds);
+
+    // If a hash is provided as the last argument, assume that it is the options
+    let (subsec, subsec_type, options) = match (opt1.map(Value::from), opt2.map(Value::from), opt3.map(Value::from)) {
+        (None, None, None) => (None, None, None),
+        (Some(opt1), None, None) => match opt1.ruby_type() {
+            Ruby::Hash => (None, None, Some(opt1)),
+            _ => (Some(opt1), None, None),
+        },
+        (Some(opt1), Some(opt2), None) => match (opt1.ruby_type(), opt2.ruby_type()) {
+            (_, Ruby::Hash) => (Some(opt1), None, Some(opt2)),
+            (_, _) => (Some(opt1), Some(opt2), None),
+        },
+        (Some(opt1), Some(opt2), Some(opt3)) => (Some(opt1), Some(opt2), Some(opt3)),
+        _ => unreachable!("mrb_get_args should have raised"),
+    };
+
+    let result = trampoline::at(&mut guard, seconds, subsec, subsec_type, options);
     match result {
         Ok(value) => value.inner(),
         Err(exception) => error::raise(guard, exception),

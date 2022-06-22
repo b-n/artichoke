@@ -26,7 +26,7 @@ pub mod mruby;
 pub mod trampoline;
 
 #[doc(inline)]
-pub use spinoso_time::chrono::Time;
+pub use spinoso_time::tzrs::{Time, Offset};
 
 impl HeapAllocatedData for Time {
     const RUBY_TYPE: &'static str = "Time";
