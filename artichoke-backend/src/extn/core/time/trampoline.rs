@@ -2,37 +2,67 @@
 
 use spinoso_time::MICROS_IN_NANO;
 
-use crate::convert::implicitly_convert_to_int;
+use crate::convert::{implicitly_convert_to_int, implicitly_convert_to_string};
+use crate::extn::core::symbol::Symbol;
 use crate::extn::core::time::{Offset, Time};
 use crate::extn::prelude::*;
-
-use bstr::ByteVec;
 
 const MAX_NANOS: i64 = 1_000_000_000 - 1;
 
 // Generate a subsecond multiplier from the given ruby value
 //
 // - If not provided, the defaults to Micros
-// - Otherwise, expects a symbolw with :milliseconds, :usec, or :nsec
+// - Otherwise, expects a symbol with :milliseconds, :usec, or :nsec
 fn subsec_multiplier(interp: &mut Artichoke, subsec_type: Option<Value>) -> Result<i64, Error> {
     match subsec_type {
         Some(subsec_type) => {
-            if subsec_type.ruby_type() == Ruby::Symbol {
-                let subsec_symbol = subsec_type.to_s(interp);
-                if subsec_symbol == Vec::from_slice(b"milliseconds") {
-                    Ok(1_000_000)
-                } else if subsec_symbol == Vec::from_slice(b"usec") {
-                    Ok(1_000)
-                } else if subsec_symbol == Vec::from_slice(b"nsec") {
-                    Ok(1)
-                } else {
-                    Err(ArgumentError::with_message("unexpected unit. expects :milliseconds, :usec, :nsec").into())
-                }
+            let subsec_symbol = unsafe { Symbol::unbox_from_value(&mut subsec_type.clone(), interp)? }.bytes(interp);
+            if subsec_symbol == b"milliseconds" {
+                Ok(1_000_000)
+            } else if subsec_symbol == b"usec" {
+                Ok(1_000)
+            } else if subsec_symbol == b"nsec" {
+                Ok(1)
             } else {
                 Err(ArgumentError::with_message("unexpected unit. expects :milliseconds, :usec, :nsec").into())
             }
         }
         None => Ok(MICROS_IN_NANO as i64),
+    }
+}
+
+fn offset_from_options(interp: &mut Artichoke, options: Value) -> Result<Offset, Error> {
+    let hash: Vec<(Value, Value)> = interp.try_convert_mut(options)?;
+    let tz = hash
+        .into_iter()
+        .map(|(k, v)| {
+            let key = unsafe { Symbol::unbox_from_value(&mut k.clone(), interp)? }.bytes(interp);
+            if key == b"in" {
+                Ok(v)
+            } else {
+                Err(ArgumentError::with_message("unknown keyword"))?
+            }
+        })
+        .collect::<Result<Vec<Value>, Error>>()?;
+
+    match tz[..] {
+        [mut tz] => match tz.ruby_type() {
+            Ruby::Fixnum => {
+                let offset_seconds = i32::try_from(implicitly_convert_to_int(interp, tz)?)
+                    .map_err(|_| ArgumentError::with_message("invalid offset"))?;
+                Ok(Offset::from(offset_seconds))
+            }
+            Ruby::String => {
+                let offset_str = unsafe { implicitly_convert_to_string(interp, &mut tz)? };
+                Ok(Offset::try_from(offset_str).map_err(|_| {
+                    ArgumentError::with_message("+HH:MM, -HH:MM, UTC, or A..I,K..Z expected for utc_offset")
+                })?)
+            }
+            _ => Err(ArgumentError::with_message(
+                "+HH:MM, -HH:MM, UTC, A..I,K..Z, or a signed number of seconds expected for utc_offset",
+            ))?,
+        },
+        _ => Err(ArgumentError::with_message("unknown keyword"))?,
     }
 }
 
@@ -68,7 +98,6 @@ pub fn at(
         _ => Err(ArgumentError::with_message("invalid arguments"))?,
     };
 
-    let _ = options;
     let seconds = implicitly_convert_to_int(interp, seconds)?;
 
     let subsec_nanos = if let Some(subsec) = subsec {
@@ -87,16 +116,9 @@ pub fn at(
         0
     };
 
-    let offset = if let Some(options) = options {
-        if options.ruby_type() == Ruby::Hash {
-            let hash: Vec<(Value, Value)> = interp.try_convert_mut(options)?;
-            println!("{:?}", hash);
-            Ok(Offset::from(0))
-        } else {
-            Err(ArgumentError::with_message("unknown keyword"))
-        }?
-    } else {
-        Offset::local()
+    let offset = match options {
+        Some(options) => offset_from_options(interp, options)?,
+        _ => Offset::local(),
     };
 
     if let Ok(time) = Time::with_timespec_and_offset(seconds, subsec_nanos, offset) {
