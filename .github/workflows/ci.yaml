@@ -531,11 +531,13 @@ jobs:
 
       - name: Check artichoke with minimal versions
         run: |
+          cargo clean
           cargo +nightly generate-lockfile -Z minimal-versions
           cargo check --workspace --all-targets --profile=test
 
       - name: Check spec-runner with minimal versions
         run: |
+          cargo clean
           cargo +nightly generate-lockfile -Z minimal-versions
           cargo check --workspace --all-targets --profile=test
         working-directory: "spec-runner"
