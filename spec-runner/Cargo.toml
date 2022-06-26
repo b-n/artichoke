@@ -17,7 +17,7 @@ clap = { version = "3.1.2", default-features = false, features = ["std", "sugges
 rust-embed = "6.3.0"
 serde = { version = "1.0.136", features = ["derive"] }
 termcolor = "1.1.0"
-toml = { version = "0.5.8", default-features = false }
+toml = { version = "0.5.9", default-features = false }
 
 [dev-dependencies]
 bstr = { version = "0.2.9", default-features = false }
