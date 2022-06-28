@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":[["format_cli_trace_into","Format an `Exception` backtrace into an [`io::Write`] suitable for displaying in a Ruby CLI."],["format_repl_trace_into","Format an `Exception` backtrace into an [`io::Write`] suitable for displaying in a Ruby REPL."]]};

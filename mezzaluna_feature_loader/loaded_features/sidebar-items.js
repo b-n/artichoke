@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":[["Features","An iterator over the features in a `LoadedFeatures`."],["Iter","An iterator over the feature paths in a `LoadedFeatures`."],["LoadedFeatures","A set of all sources loaded by a Ruby interpreter with `require` and `require_relative`."]]};

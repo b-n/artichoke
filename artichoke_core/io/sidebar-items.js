@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"trait":[["Io","Perform I/O external to the interpreter."]]};

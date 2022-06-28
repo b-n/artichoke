@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":[["Builder",""],["Rclass",""],["Registry","A registry for Class specs that uses types as keys."],["Spec",""]]};

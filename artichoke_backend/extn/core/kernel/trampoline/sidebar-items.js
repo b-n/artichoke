@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":[["integer",""],["load",""],["p",""],["print",""],["puts",""],["require",""],["require_relative",""]]};

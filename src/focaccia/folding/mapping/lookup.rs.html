@@ -1,0 +1,1705 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/focaccia-1.1.2/src/folding/mapping/lookup.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lookup.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../focaccia/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"></h2>
+    </nav>
+    <nav class="sidebar"><a class="sidebar-logo" href="../../../../focaccia/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
+        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../focaccia/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
+                                <a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div>
+                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<span id="2">2</span>
+<span id="3">3</span>
+<span id="4">4</span>
+<span id="5">5</span>
+<span id="6">6</span>
+<span id="7">7</span>
+<span id="8">8</span>
+<span id="9">9</span>
+<span id="10">10</span>
+<span id="11">11</span>
+<span id="12">12</span>
+<span id="13">13</span>
+<span id="14">14</span>
+<span id="15">15</span>
+<span id="16">16</span>
+<span id="17">17</span>
+<span id="18">18</span>
+<span id="19">19</span>
+<span id="20">20</span>
+<span id="21">21</span>
+<span id="22">22</span>
+<span id="23">23</span>
+<span id="24">24</span>
+<span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
+<span id="44">44</span>
+<span id="45">45</span>
+<span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
+<span id="50">50</span>
+<span id="51">51</span>
+<span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
+<span id="57">57</span>
+<span id="58">58</span>
+<span id="59">59</span>
+<span id="60">60</span>
+<span id="61">61</span>
+<span id="62">62</span>
+<span id="63">63</span>
+<span id="64">64</span>
+<span id="65">65</span>
+<span id="66">66</span>
+<span id="67">67</span>
+<span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
+<span id="71">71</span>
+<span id="72">72</span>
+<span id="73">73</span>
+<span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
+<span id="77">77</span>
+<span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
+<span id="86">86</span>
+<span id="87">87</span>
+<span id="88">88</span>
+<span id="89">89</span>
+<span id="90">90</span>
+<span id="91">91</span>
+<span id="92">92</span>
+<span id="93">93</span>
+<span id="94">94</span>
+<span id="95">95</span>
+<span id="96">96</span>
+<span id="97">97</span>
+<span id="98">98</span>
+<span id="99">99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
+<span id="357">357</span>
+<span id="358">358</span>
+<span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
+<span id="362">362</span>
+<span id="363">363</span>
+<span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
+<span id="367">367</span>
+<span id="368">368</span>
+<span id="369">369</span>
+<span id="370">370</span>
+<span id="371">371</span>
+<span id="372">372</span>
+<span id="373">373</span>
+<span id="374">374</span>
+<span id="375">375</span>
+<span id="376">376</span>
+<span id="377">377</span>
+<span id="378">378</span>
+<span id="379">379</span>
+<span id="380">380</span>
+<span id="381">381</span>
+<span id="382">382</span>
+<span id="383">383</span>
+<span id="384">384</span>
+<span id="385">385</span>
+<span id="386">386</span>
+<span id="387">387</span>
+<span id="388">388</span>
+<span id="389">389</span>
+<span id="390">390</span>
+<span id="391">391</span>
+<span id="392">392</span>
+<span id="393">393</span>
+<span id="394">394</span>
+<span id="395">395</span>
+<span id="396">396</span>
+<span id="397">397</span>
+<span id="398">398</span>
+<span id="399">399</span>
+<span id="400">400</span>
+<span id="401">401</span>
+<span id="402">402</span>
+<span id="403">403</span>
+<span id="404">404</span>
+<span id="405">405</span>
+<span id="406">406</span>
+<span id="407">407</span>
+<span id="408">408</span>
+<span id="409">409</span>
+<span id="410">410</span>
+<span id="411">411</span>
+<span id="412">412</span>
+<span id="413">413</span>
+<span id="414">414</span>
+<span id="415">415</span>
+<span id="416">416</span>
+<span id="417">417</span>
+<span id="418">418</span>
+<span id="419">419</span>
+<span id="420">420</span>
+<span id="421">421</span>
+<span id="422">422</span>
+<span id="423">423</span>
+<span id="424">424</span>
+<span id="425">425</span>
+<span id="426">426</span>
+<span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
+<span id="548">548</span>
+<span id="549">549</span>
+<span id="550">550</span>
+<span id="551">551</span>
+<span id="552">552</span>
+<span id="553">553</span>
+<span id="554">554</span>
+<span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
+<span id="570">570</span>
+<span id="571">571</span>
+<span id="572">572</span>
+<span id="573">573</span>
+<span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
+<span id="580">580</span>
+<span id="581">581</span>
+<span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
+<span id="587">587</span>
+<span id="588">588</span>
+<span id="589">589</span>
+<span id="590">590</span>
+<span id="591">591</span>
+<span id="592">592</span>
+<span id="593">593</span>
+<span id="594">594</span>
+<span id="595">595</span>
+<span id="596">596</span>
+<span id="597">597</span>
+<span id="598">598</span>
+<span id="599">599</span>
+<span id="600">600</span>
+<span id="601">601</span>
+<span id="602">602</span>
+<span id="603">603</span>
+<span id="604">604</span>
+<span id="605">605</span>
+<span id="606">606</span>
+<span id="607">607</span>
+<span id="608">608</span>
+<span id="609">609</span>
+<span id="610">610</span>
+<span id="611">611</span>
+<span id="612">612</span>
+<span id="613">613</span>
+<span id="614">614</span>
+<span id="615">615</span>
+<span id="616">616</span>
+<span id="617">617</span>
+<span id="618">618</span>
+<span id="619">619</span>
+<span id="620">620</span>
+<span id="621">621</span>
+<span id="622">622</span>
+<span id="623">623</span>
+<span id="624">624</span>
+<span id="625">625</span>
+<span id="626">626</span>
+<span id="627">627</span>
+<span id="628">628</span>
+<span id="629">629</span>
+<span id="630">630</span>
+<span id="631">631</span>
+<span id="632">632</span>
+<span id="633">633</span>
+<span id="634">634</span>
+<span id="635">635</span>
+<span id="636">636</span>
+<span id="637">637</span>
+<span id="638">638</span>
+<span id="639">639</span>
+<span id="640">640</span>
+<span id="641">641</span>
+<span id="642">642</span>
+<span id="643">643</span>
+<span id="644">644</span>
+<span id="645">645</span>
+<span id="646">646</span>
+<span id="647">647</span>
+<span id="648">648</span>
+<span id="649">649</span>
+<span id="650">650</span>
+<span id="651">651</span>
+<span id="652">652</span>
+<span id="653">653</span>
+<span id="654">654</span>
+<span id="655">655</span>
+<span id="656">656</span>
+<span id="657">657</span>
+<span id="658">658</span>
+<span id="659">659</span>
+<span id="660">660</span>
+<span id="661">661</span>
+<span id="662">662</span>
+<span id="663">663</span>
+<span id="664">664</span>
+<span id="665">665</span>
+<span id="666">666</span>
+<span id="667">667</span>
+<span id="668">668</span>
+<span id="669">669</span>
+<span id="670">670</span>
+<span id="671">671</span>
+<span id="672">672</span>
+<span id="673">673</span>
+<span id="674">674</span>
+<span id="675">675</span>
+<span id="676">676</span>
+<span id="677">677</span>
+<span id="678">678</span>
+<span id="679">679</span>
+<span id="680">680</span>
+<span id="681">681</span>
+<span id="682">682</span>
+<span id="683">683</span>
+<span id="684">684</span>
+<span id="685">685</span>
+<span id="686">686</span>
+<span id="687">687</span>
+<span id="688">688</span>
+<span id="689">689</span>
+<span id="690">690</span>
+<span id="691">691</span>
+<span id="692">692</span>
+<span id="693">693</span>
+<span id="694">694</span>
+<span id="695">695</span>
+<span id="696">696</span>
+<span id="697">697</span>
+<span id="698">698</span>
+<span id="699">699</span>
+<span id="700">700</span>
+<span id="701">701</span>
+<span id="702">702</span>
+<span id="703">703</span>
+<span id="704">704</span>
+<span id="705">705</span>
+<span id="706">706</span>
+<span id="707">707</span>
+<span id="708">708</span>
+<span id="709">709</span>
+<span id="710">710</span>
+<span id="711">711</span>
+<span id="712">712</span>
+<span id="713">713</span>
+<span id="714">714</span>
+<span id="715">715</span>
+<span id="716">716</span>
+<span id="717">717</span>
+<span id="718">718</span>
+<span id="719">719</span>
+<span id="720">720</span>
+<span id="721">721</span>
+<span id="722">722</span>
+<span id="723">723</span>
+<span id="724">724</span>
+<span id="725">725</span>
+<span id="726">726</span>
+<span id="727">727</span>
+<span id="728">728</span>
+<span id="729">729</span>
+<span id="730">730</span>
+<span id="731">731</span>
+<span id="732">732</span>
+<span id="733">733</span>
+<span id="734">734</span>
+<span id="735">735</span>
+<span id="736">736</span>
+<span id="737">737</span>
+<span id="738">738</span>
+<span id="739">739</span>
+<span id="740">740</span>
+<span id="741">741</span>
+<span id="742">742</span>
+<span id="743">743</span>
+<span id="744">744</span>
+<span id="745">745</span>
+<span id="746">746</span>
+<span id="747">747</span>
+<span id="748">748</span>
+<span id="749">749</span>
+<span id="750">750</span>
+<span id="751">751</span>
+<span id="752">752</span>
+<span id="753">753</span>
+<span id="754">754</span>
+<span id="755">755</span>
+<span id="756">756</span>
+<span id="757">757</span>
+<span id="758">758</span>
+<span id="759">759</span>
+<span id="760">760</span>
+<span id="761">761</span>
+<span id="762">762</span>
+<span id="763">763</span>
+<span id="764">764</span>
+<span id="765">765</span>
+<span id="766">766</span>
+<span id="767">767</span>
+<span id="768">768</span>
+<span id="769">769</span>
+<span id="770">770</span>
+<span id="771">771</span>
+<span id="772">772</span>
+<span id="773">773</span>
+<span id="774">774</span>
+<span id="775">775</span>
+<span id="776">776</span>
+<span id="777">777</span>
+<span id="778">778</span>
+<span id="779">779</span>
+<span id="780">780</span>
+<span id="781">781</span>
+<span id="782">782</span>
+<span id="783">783</span>
+<span id="784">784</span>
+<span id="785">785</span>
+<span id="786">786</span>
+<span id="787">787</span>
+<span id="788">788</span>
+<span id="789">789</span>
+<span id="790">790</span>
+<span id="791">791</span>
+<span id="792">792</span>
+<span id="793">793</span>
+<span id="794">794</span>
+<span id="795">795</span>
+<span id="796">796</span>
+<span id="797">797</span>
+<span id="798">798</span>
+<span id="799">799</span>
+<span id="800">800</span>
+<span id="801">801</span>
+<span id="802">802</span>
+<span id="803">803</span>
+<span id="804">804</span>
+<span id="805">805</span>
+<span id="806">806</span>
+<span id="807">807</span>
+<span id="808">808</span>
+<span id="809">809</span>
+<span id="810">810</span>
+<span id="811">811</span>
+<span id="812">812</span>
+<span id="813">813</span>
+<span id="814">814</span>
+<span id="815">815</span>
+<span id="816">816</span>
+<span id="817">817</span>
+<span id="818">818</span>
+<span id="819">819</span>
+<span id="820">820</span>
+<span id="821">821</span>
+<span id="822">822</span>
+<span id="823">823</span>
+<span id="824">824</span>
+<span id="825">825</span>
+<span id="826">826</span>
+<span id="827">827</span>
+<span id="828">828</span>
+<span id="829">829</span>
+<span id="830">830</span>
+<span id="831">831</span>
+<span id="832">832</span>
+<span id="833">833</span>
+<span id="834">834</span>
+<span id="835">835</span>
+<span id="836">836</span>
+<span id="837">837</span>
+<span id="838">838</span>
+<span id="839">839</span>
+<span id="840">840</span>
+<span id="841">841</span>
+<span id="842">842</span>
+<span id="843">843</span>
+<span id="844">844</span>
+<span id="845">845</span>
+<span id="846">846</span>
+<span id="847">847</span>
+<span id="848">848</span>
+</pre><pre class="rust"><code><span class="comment">// @generated</span>
+<span class="comment">//</span>
+<span class="comment">// This source is autogenerated. Do not modify it directly.</span>
+<span class="comment">// To make modfications to this code, see `scripts/gen_case_lookups.rb`.</span>
+<span class="comment">//</span>
+<span class="comment">// Last generated on 2022-01-23 03:22:04 UTC.</span>
+<span class="comment">//</span>
+<span class="comment">// Unicode version:</span>
+<span class="comment">// CaseFolding-14.0.0.txt</span>
+<span class="comment">// Date: 2021-03-08, 19:35:41 GMT</span>
+<span class="comment">// © 2021 Unicode®, Inc.</span>
+
+<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Mapping</span>, <span class="ident">Mode</span>};
+
+<span class="attribute">#[<span class="ident">must_use</span>]</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::match_same_arms</span>)]</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::too_many_lines</span>)]</span>
+<span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">lookup</span>(<span class="ident">c</span>: <span class="ident">char</span>, <span class="ident">mode</span>: <span class="ident">Mode</span>) -&gt; <span class="ident">Mapping</span> {
+    <span class="kw">let</span> <span class="ident">codepoint</span> <span class="op">=</span> <span class="ident">c</span> <span class="kw">as</span> <span class="ident">u32</span>;
+    <span class="kw">let</span> <span class="ident">char_bytes</span> <span class="op">=</span> <span class="ident">codepoint</span>.<span class="ident">to_be_bytes</span>();
+    <span class="kw">let</span> <span class="ident">mid_byte</span> <span class="op">=</span> <span class="ident">char_bytes</span>[<span class="number">2</span>];
+    <span class="kw">let</span> <span class="ident">high_bytes</span> <span class="op">=</span> <span class="ident">u16::from_be_bytes</span>([<span class="ident">char_bytes</span>[<span class="number">0</span>], <span class="ident">char_bytes</span>[<span class="number">1</span>]]);
+    <span class="kw">match</span> (<span class="ident">high_bytes</span>, <span class="ident">mid_byte</span>) {
+        (<span class="number">0x0000</span>, <span class="number">0x00</span>) =&gt; <span class="kw">match</span> <span class="ident">c</span> {
+            <span class="comment">// Turkic mapping in ASCII range</span>
+            <span class="comment">// 0049; T; 0131; # LATIN CAPITAL LETTER I</span>
+            <span class="string">&#39;\u{0049}&#39;</span> <span class="kw">if</span> <span class="macro">matches!</span>(<span class="ident">mode</span>, <span class="ident">Mode::Turkic</span>) =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0131</span>),
+            <span class="ident">c</span> <span class="kw">if</span> <span class="ident">c</span>.<span class="ident">is_ascii</span>() =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">c</span>.<span class="ident">to_ascii_lowercase</span>() <span class="kw">as</span> <span class="ident">u32</span>),
+            <span class="string">&#39;\u{00B5}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x03BC</span>),
+            <span class="string">&#39;\u{00C0}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{00D6}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_add</span>(<span class="number">0x0020</span>)),
+            <span class="string">&#39;\u{00D8}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{00DE}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_add</span>(<span class="number">0x0020</span>)),
+            <span class="string">&#39;\u{00DF}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="number">0x0073</span>, <span class="number">0x0073</span>),
+            <span class="kw">_</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>),
+        },
+        (<span class="number">0x0000</span>, <span class="number">0x01</span>) =&gt; <span class="kw">match</span> <span class="ident">c</span> {
+            <span class="string">&#39;\u{0100}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0101</span>),
+            <span class="string">&#39;\u{0102}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0103</span>),
+            <span class="string">&#39;\u{0104}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0105</span>),
+            <span class="string">&#39;\u{0106}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0107</span>),
+            <span class="string">&#39;\u{0108}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0109</span>),
+            <span class="string">&#39;\u{010A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x010B</span>),
+            <span class="string">&#39;\u{010C}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x010D</span>),
+            <span class="string">&#39;\u{010E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x010F</span>),
+            <span class="string">&#39;\u{0110}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0111</span>),
+            <span class="string">&#39;\u{0112}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0113</span>),
+            <span class="string">&#39;\u{0114}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0115</span>),
+            <span class="string">&#39;\u{0116}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0117</span>),
+            <span class="string">&#39;\u{0118}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0119</span>),
+            <span class="string">&#39;\u{011A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x011B</span>),
+            <span class="string">&#39;\u{011C}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x011D</span>),
+            <span class="string">&#39;\u{011E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x011F</span>),
+            <span class="string">&#39;\u{0120}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0121</span>),
+            <span class="string">&#39;\u{0122}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0123</span>),
+            <span class="string">&#39;\u{0124}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0125</span>),
+            <span class="string">&#39;\u{0126}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0127</span>),
+            <span class="string">&#39;\u{0128}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0129</span>),
+            <span class="string">&#39;\u{012A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x012B</span>),
+            <span class="string">&#39;\u{012C}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x012D</span>),
+            <span class="string">&#39;\u{012E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x012F</span>),
+            <span class="string">&#39;\u{0130}&#39;</span> <span class="kw">if</span> <span class="macro">matches!</span>(<span class="ident">mode</span>, <span class="ident">Mode::Full</span>) =&gt; <span class="ident">Mapping::Double</span>(<span class="number">0x0069</span>, <span class="number">0x0307</span>),
+            <span class="string">&#39;\u{0130}&#39;</span> <span class="kw">if</span> <span class="macro">matches!</span>(<span class="ident">mode</span>, <span class="ident">Mode::Turkic</span>) =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0069</span>),
+            <span class="string">&#39;\u{0132}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0133</span>),
+            <span class="string">&#39;\u{0134}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0135</span>),
+            <span class="string">&#39;\u{0136}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0137</span>),
+            <span class="string">&#39;\u{0139}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x013A</span>),
+            <span class="string">&#39;\u{013B}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x013C</span>),
+            <span class="string">&#39;\u{013D}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x013E</span>),
+            <span class="string">&#39;\u{013F}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0140</span>),
+            <span class="string">&#39;\u{0141}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0142</span>),
+            <span class="string">&#39;\u{0143}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0144</span>),
+            <span class="string">&#39;\u{0145}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0146</span>),
+            <span class="string">&#39;\u{0147}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0148</span>),
+            <span class="string">&#39;\u{0149}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="number">0x02BC</span>, <span class="number">0x006E</span>),
+            <span class="string">&#39;\u{014A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x014B</span>),
+            <span class="string">&#39;\u{014C}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x014D</span>),
+            <span class="string">&#39;\u{014E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x014F</span>),
+            <span class="string">&#39;\u{0150}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0151</span>),
+            <span class="string">&#39;\u{0152}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0153</span>),
+            <span class="string">&#39;\u{0154}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0155</span>),
+            <span class="string">&#39;\u{0156}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0157</span>),
+            <span class="string">&#39;\u{0158}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0159</span>),
+            <span class="string">&#39;\u{015A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x015B</span>),
+            <span class="string">&#39;\u{015C}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x015D</span>),
+            <span class="string">&#39;\u{015E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x015F</span>),
+            <span class="string">&#39;\u{0160}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0161</span>),
+            <span class="string">&#39;\u{0162}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0163</span>),
+            <span class="string">&#39;\u{0164}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0165</span>),
+            <span class="string">&#39;\u{0166}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0167</span>),
+            <span class="string">&#39;\u{0168}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0169</span>),
+            <span class="string">&#39;\u{016A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x016B</span>),
+            <span class="string">&#39;\u{016C}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x016D</span>),
+            <span class="string">&#39;\u{016E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x016F</span>),
+            <span class="string">&#39;\u{0170}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0171</span>),
+            <span class="string">&#39;\u{0172}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0173</span>),
+            <span class="string">&#39;\u{0174}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0175</span>),
+            <span class="string">&#39;\u{0176}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0177</span>),
+            <span class="string">&#39;\u{0178}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x00FF</span>),
+            <span class="string">&#39;\u{0179}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x017A</span>),
+            <span class="string">&#39;\u{017B}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x017C</span>),
+            <span class="string">&#39;\u{017D}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x017E</span>),
+            <span class="string">&#39;\u{017F}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0073</span>),
+            <span class="string">&#39;\u{0181}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0253</span>),
+            <span class="string">&#39;\u{0182}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0183</span>),
+            <span class="string">&#39;\u{0184}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0185</span>),
+            <span class="string">&#39;\u{0186}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0254</span>),
+            <span class="string">&#39;\u{0187}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0188</span>),
+            <span class="string">&#39;\u{0189}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{018A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_add</span>(<span class="number">0x00cd</span>)),
+            <span class="string">&#39;\u{018B}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x018C</span>),
+            <span class="string">&#39;\u{018E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01DD</span>),
+            <span class="string">&#39;\u{018F}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0259</span>),
+            <span class="string">&#39;\u{0190}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x025B</span>),
+            <span class="string">&#39;\u{0191}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0192</span>),
+            <span class="string">&#39;\u{0193}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0260</span>),
+            <span class="string">&#39;\u{0194}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0263</span>),
+            <span class="string">&#39;\u{0196}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0269</span>),
+            <span class="string">&#39;\u{0197}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0268</span>),
+            <span class="string">&#39;\u{0198}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0199</span>),
+            <span class="string">&#39;\u{019C}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x026F</span>),
+            <span class="string">&#39;\u{019D}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0272</span>),
+            <span class="string">&#39;\u{019F}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0275</span>),
+            <span class="string">&#39;\u{01A0}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01A1</span>),
+            <span class="string">&#39;\u{01A2}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01A3</span>),
+            <span class="string">&#39;\u{01A4}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01A5</span>),
+            <span class="string">&#39;\u{01A6}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0280</span>),
+            <span class="string">&#39;\u{01A7}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01A8</span>),
+            <span class="string">&#39;\u{01A9}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0283</span>),
+            <span class="string">&#39;\u{01AC}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01AD</span>),
+            <span class="string">&#39;\u{01AE}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0288</span>),
+            <span class="string">&#39;\u{01AF}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01B0</span>),
+            <span class="string">&#39;\u{01B1}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{01B2}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_add</span>(<span class="number">0x00d9</span>)),
+            <span class="string">&#39;\u{01B3}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01B4</span>),
+            <span class="string">&#39;\u{01B5}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01B6</span>),
+            <span class="string">&#39;\u{01B7}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0292</span>),
+            <span class="string">&#39;\u{01B8}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01B9</span>),
+            <span class="string">&#39;\u{01BC}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01BD</span>),
+            <span class="string">&#39;\u{01C4}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01C6</span>),
+            <span class="string">&#39;\u{01C5}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01C6</span>),
+            <span class="string">&#39;\u{01C7}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01C9</span>),
+            <span class="string">&#39;\u{01C8}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01C9</span>),
+            <span class="string">&#39;\u{01CA}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01CC</span>),
+            <span class="string">&#39;\u{01CB}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01CC</span>),
+            <span class="string">&#39;\u{01CD}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01CE</span>),
+            <span class="string">&#39;\u{01CF}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01D0</span>),
+            <span class="string">&#39;\u{01D1}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01D2</span>),
+            <span class="string">&#39;\u{01D3}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01D4</span>),
+            <span class="string">&#39;\u{01D5}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01D6</span>),
+            <span class="string">&#39;\u{01D7}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01D8</span>),
+            <span class="string">&#39;\u{01D9}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01DA</span>),
+            <span class="string">&#39;\u{01DB}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01DC</span>),
+            <span class="string">&#39;\u{01DE}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01DF</span>),
+            <span class="string">&#39;\u{01E0}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01E1</span>),
+            <span class="string">&#39;\u{01E2}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01E3</span>),
+            <span class="string">&#39;\u{01E4}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01E5</span>),
+            <span class="string">&#39;\u{01E6}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01E7</span>),
+            <span class="string">&#39;\u{01E8}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01E9</span>),
+            <span class="string">&#39;\u{01EA}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01EB</span>),
+            <span class="string">&#39;\u{01EC}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01ED</span>),
+            <span class="string">&#39;\u{01EE}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01EF</span>),
+            <span class="string">&#39;\u{01F0}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="number">0x006A</span>, <span class="number">0x030C</span>),
+            <span class="string">&#39;\u{01F1}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01F3</span>),
+            <span class="string">&#39;\u{01F2}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01F3</span>),
+            <span class="string">&#39;\u{01F4}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01F5</span>),
+            <span class="string">&#39;\u{01F6}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0195</span>),
+            <span class="string">&#39;\u{01F7}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01BF</span>),
+            <span class="string">&#39;\u{01F8}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01F9</span>),
+            <span class="string">&#39;\u{01FA}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01FB</span>),
+            <span class="string">&#39;\u{01FC}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01FD</span>),
+            <span class="string">&#39;\u{01FE}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x01FF</span>),
+            <span class="kw">_</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>),
+        },
+        (<span class="number">0x0000</span>, <span class="number">0x02</span>) =&gt; <span class="kw">match</span> <span class="ident">c</span> {
+            <span class="string">&#39;\u{0200}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0201</span>),
+            <span class="string">&#39;\u{0202}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0203</span>),
+            <span class="string">&#39;\u{0204}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0205</span>),
+            <span class="string">&#39;\u{0206}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0207</span>),
+            <span class="string">&#39;\u{0208}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0209</span>),
+            <span class="string">&#39;\u{020A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x020B</span>),
+            <span class="string">&#39;\u{020C}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x020D</span>),
+            <span class="string">&#39;\u{020E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x020F</span>),
+            <span class="string">&#39;\u{0210}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0211</span>),
+            <span class="string">&#39;\u{0212}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0213</span>),
+            <span class="string">&#39;\u{0214}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0215</span>),
+            <span class="string">&#39;\u{0216}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0217</span>),
+            <span class="string">&#39;\u{0218}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0219</span>),
+            <span class="string">&#39;\u{021A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x021B</span>),
+            <span class="string">&#39;\u{021C}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x021D</span>),
+            <span class="string">&#39;\u{021E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x021F</span>),
+            <span class="string">&#39;\u{0220}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x019E</span>),
+            <span class="string">&#39;\u{0222}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0223</span>),
+            <span class="string">&#39;\u{0224}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0225</span>),
+            <span class="string">&#39;\u{0226}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0227</span>),
+            <span class="string">&#39;\u{0228}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0229</span>),
+            <span class="string">&#39;\u{022A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x022B</span>),
+            <span class="string">&#39;\u{022C}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x022D</span>),
+            <span class="string">&#39;\u{022E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x022F</span>),
+            <span class="string">&#39;\u{0230}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0231</span>),
+            <span class="string">&#39;\u{0232}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0233</span>),
+            <span class="string">&#39;\u{023A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2C65</span>),
+            <span class="string">&#39;\u{023B}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x023C</span>),
+            <span class="string">&#39;\u{023D}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x019A</span>),
+            <span class="string">&#39;\u{023E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2C66</span>),
+            <span class="string">&#39;\u{0241}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0242</span>),
+            <span class="string">&#39;\u{0243}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0180</span>),
+            <span class="string">&#39;\u{0244}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0289</span>),
+            <span class="string">&#39;\u{0245}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x028C</span>),
+            <span class="string">&#39;\u{0246}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0247</span>),
+            <span class="string">&#39;\u{0248}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0249</span>),
+            <span class="string">&#39;\u{024A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x024B</span>),
+            <span class="string">&#39;\u{024C}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x024D</span>),
+            <span class="string">&#39;\u{024E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x024F</span>),
+            <span class="kw">_</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>),
+        },
+        (<span class="number">0x0000</span>, <span class="number">0x03</span>) =&gt; <span class="kw">match</span> <span class="ident">c</span> {
+            <span class="string">&#39;\u{0345}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x03B9</span>),
+            <span class="string">&#39;\u{0370}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0371</span>),
+            <span class="string">&#39;\u{0372}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0373</span>),
+            <span class="string">&#39;\u{0376}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0377</span>),
+            <span class="string">&#39;\u{037F}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x03F3</span>),
+            <span class="string">&#39;\u{0386}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x03AC</span>),
+            <span class="string">&#39;\u{0388}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{038A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_add</span>(<span class="number">0x0025</span>)),
+            <span class="string">&#39;\u{038C}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x03CC</span>),
+            <span class="string">&#39;\u{038E}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{038F}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_add</span>(<span class="number">0x003f</span>)),
+            <span class="string">&#39;\u{0390}&#39;</span> =&gt; <span class="ident">Mapping::Triple</span>(<span class="number">0x03B9</span>, <span class="number">0x0308</span>, <span class="number">0x0301</span>),
+            <span class="string">&#39;\u{0391}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{03A1}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_add</span>(<span class="number">0x0020</span>)),
+            <span class="string">&#39;\u{03A3}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{03AB}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_add</span>(<span class="number">0x0020</span>)),
+            <span class="string">&#39;\u{03B0}&#39;</span> =&gt; <span class="ident">Mapping::Triple</span>(<span class="number">0x03C5</span>, <span class="number">0x0308</span>, <span class="number">0x0301</span>),
+            <span class="string">&#39;\u{03C2}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x03C3</span>),
+            <span class="string">&#39;\u{03CF}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x03D7</span>),
+            <span class="string">&#39;\u{03D0}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x03B2</span>),
+            <span class="string">&#39;\u{03D1}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x03B8</span>),
+            <span class="string">&#39;\u{03D5}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x03C6</span>),
+            <span class="string">&#39;\u{03D6}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x03C0</span>),
+            <span class="string">&#39;\u{03D8}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x03D9</span>),
+            <span class="string">&#39;\u{03DA}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x03DB</span>),
+            <span class="string">&#39;\u{03DC}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x03DD</span>),
+            <span class="string">&#39;\u{03DE}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x03DF</span>),
+            <span class="string">&#39;\u{03E0}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x03E1</span>),
+            <span class="string">&#39;\u{03E2}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x03E3</span>),
+            <span class="string">&#39;\u{03E4}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x03E5</span>),
+            <span class="string">&#39;\u{03E6}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x03E7</span>),
+            <span class="string">&#39;\u{03E8}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x03E9</span>),
+            <span class="string">&#39;\u{03EA}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x03EB</span>),
+            <span class="string">&#39;\u{03EC}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x03ED</span>),
+            <span class="string">&#39;\u{03EE}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x03EF</span>),
+            <span class="string">&#39;\u{03F0}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x03BA</span>),
+            <span class="string">&#39;\u{03F1}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x03C1</span>),
+            <span class="string">&#39;\u{03F4}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x03B8</span>),
+            <span class="string">&#39;\u{03F5}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x03B5</span>),
+            <span class="string">&#39;\u{03F7}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x03F8</span>),
+            <span class="string">&#39;\u{03F9}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x03F2</span>),
+            <span class="string">&#39;\u{03FA}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x03FB</span>),
+            <span class="string">&#39;\u{03FD}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{03FF}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_sub</span>(<span class="number">0x0082</span>)),
+            <span class="kw">_</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>),
+        },
+        (<span class="number">0x0000</span>, <span class="number">0x04</span>) =&gt; <span class="kw">match</span> <span class="ident">c</span> {
+            <span class="string">&#39;\u{0400}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{040F}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_add</span>(<span class="number">0x0050</span>)),
+            <span class="string">&#39;\u{0410}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{042F}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_add</span>(<span class="number">0x0020</span>)),
+            <span class="string">&#39;\u{0460}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0461</span>),
+            <span class="string">&#39;\u{0462}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0463</span>),
+            <span class="string">&#39;\u{0464}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0465</span>),
+            <span class="string">&#39;\u{0466}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0467</span>),
+            <span class="string">&#39;\u{0468}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0469</span>),
+            <span class="string">&#39;\u{046A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x046B</span>),
+            <span class="string">&#39;\u{046C}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x046D</span>),
+            <span class="string">&#39;\u{046E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x046F</span>),
+            <span class="string">&#39;\u{0470}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0471</span>),
+            <span class="string">&#39;\u{0472}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0473</span>),
+            <span class="string">&#39;\u{0474}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0475</span>),
+            <span class="string">&#39;\u{0476}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0477</span>),
+            <span class="string">&#39;\u{0478}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0479</span>),
+            <span class="string">&#39;\u{047A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x047B</span>),
+            <span class="string">&#39;\u{047C}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x047D</span>),
+            <span class="string">&#39;\u{047E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x047F</span>),
+            <span class="string">&#39;\u{0480}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0481</span>),
+            <span class="string">&#39;\u{048A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x048B</span>),
+            <span class="string">&#39;\u{048C}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x048D</span>),
+            <span class="string">&#39;\u{048E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x048F</span>),
+            <span class="string">&#39;\u{0490}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0491</span>),
+            <span class="string">&#39;\u{0492}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0493</span>),
+            <span class="string">&#39;\u{0494}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0495</span>),
+            <span class="string">&#39;\u{0496}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0497</span>),
+            <span class="string">&#39;\u{0498}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0499</span>),
+            <span class="string">&#39;\u{049A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x049B</span>),
+            <span class="string">&#39;\u{049C}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x049D</span>),
+            <span class="string">&#39;\u{049E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x049F</span>),
+            <span class="string">&#39;\u{04A0}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04A1</span>),
+            <span class="string">&#39;\u{04A2}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04A3</span>),
+            <span class="string">&#39;\u{04A4}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04A5</span>),
+            <span class="string">&#39;\u{04A6}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04A7</span>),
+            <span class="string">&#39;\u{04A8}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04A9</span>),
+            <span class="string">&#39;\u{04AA}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04AB</span>),
+            <span class="string">&#39;\u{04AC}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04AD</span>),
+            <span class="string">&#39;\u{04AE}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04AF</span>),
+            <span class="string">&#39;\u{04B0}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04B1</span>),
+            <span class="string">&#39;\u{04B2}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04B3</span>),
+            <span class="string">&#39;\u{04B4}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04B5</span>),
+            <span class="string">&#39;\u{04B6}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04B7</span>),
+            <span class="string">&#39;\u{04B8}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04B9</span>),
+            <span class="string">&#39;\u{04BA}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04BB</span>),
+            <span class="string">&#39;\u{04BC}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04BD</span>),
+            <span class="string">&#39;\u{04BE}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04BF</span>),
+            <span class="string">&#39;\u{04C0}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04CF</span>),
+            <span class="string">&#39;\u{04C1}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04C2</span>),
+            <span class="string">&#39;\u{04C3}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04C4</span>),
+            <span class="string">&#39;\u{04C5}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04C6</span>),
+            <span class="string">&#39;\u{04C7}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04C8</span>),
+            <span class="string">&#39;\u{04C9}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04CA</span>),
+            <span class="string">&#39;\u{04CB}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04CC</span>),
+            <span class="string">&#39;\u{04CD}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04CE</span>),
+            <span class="string">&#39;\u{04D0}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04D1</span>),
+            <span class="string">&#39;\u{04D2}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04D3</span>),
+            <span class="string">&#39;\u{04D4}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04D5</span>),
+            <span class="string">&#39;\u{04D6}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04D7</span>),
+            <span class="string">&#39;\u{04D8}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04D9</span>),
+            <span class="string">&#39;\u{04DA}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04DB</span>),
+            <span class="string">&#39;\u{04DC}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04DD</span>),
+            <span class="string">&#39;\u{04DE}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04DF</span>),
+            <span class="string">&#39;\u{04E0}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04E1</span>),
+            <span class="string">&#39;\u{04E2}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04E3</span>),
+            <span class="string">&#39;\u{04E4}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04E5</span>),
+            <span class="string">&#39;\u{04E6}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04E7</span>),
+            <span class="string">&#39;\u{04E8}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04E9</span>),
+            <span class="string">&#39;\u{04EA}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04EB</span>),
+            <span class="string">&#39;\u{04EC}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04ED</span>),
+            <span class="string">&#39;\u{04EE}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04EF</span>),
+            <span class="string">&#39;\u{04F0}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04F1</span>),
+            <span class="string">&#39;\u{04F2}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04F3</span>),
+            <span class="string">&#39;\u{04F4}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04F5</span>),
+            <span class="string">&#39;\u{04F6}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04F7</span>),
+            <span class="string">&#39;\u{04F8}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04F9</span>),
+            <span class="string">&#39;\u{04FA}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04FB</span>),
+            <span class="string">&#39;\u{04FC}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04FD</span>),
+            <span class="string">&#39;\u{04FE}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x04FF</span>),
+            <span class="kw">_</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>),
+        },
+        (<span class="number">0x0000</span>, <span class="number">0x05</span>) =&gt; <span class="kw">match</span> <span class="ident">c</span> {
+            <span class="string">&#39;\u{0500}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0501</span>),
+            <span class="string">&#39;\u{0502}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0503</span>),
+            <span class="string">&#39;\u{0504}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0505</span>),
+            <span class="string">&#39;\u{0506}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0507</span>),
+            <span class="string">&#39;\u{0508}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0509</span>),
+            <span class="string">&#39;\u{050A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x050B</span>),
+            <span class="string">&#39;\u{050C}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x050D</span>),
+            <span class="string">&#39;\u{050E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x050F</span>),
+            <span class="string">&#39;\u{0510}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0511</span>),
+            <span class="string">&#39;\u{0512}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0513</span>),
+            <span class="string">&#39;\u{0514}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0515</span>),
+            <span class="string">&#39;\u{0516}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0517</span>),
+            <span class="string">&#39;\u{0518}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0519</span>),
+            <span class="string">&#39;\u{051A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x051B</span>),
+            <span class="string">&#39;\u{051C}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x051D</span>),
+            <span class="string">&#39;\u{051E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x051F</span>),
+            <span class="string">&#39;\u{0520}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0521</span>),
+            <span class="string">&#39;\u{0522}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0523</span>),
+            <span class="string">&#39;\u{0524}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0525</span>),
+            <span class="string">&#39;\u{0526}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0527</span>),
+            <span class="string">&#39;\u{0528}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0529</span>),
+            <span class="string">&#39;\u{052A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x052B</span>),
+            <span class="string">&#39;\u{052C}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x052D</span>),
+            <span class="string">&#39;\u{052E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x052F</span>),
+            <span class="string">&#39;\u{0531}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{0556}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_add</span>(<span class="number">0x0030</span>)),
+            <span class="string">&#39;\u{0587}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="number">0x0565</span>, <span class="number">0x0582</span>),
+            <span class="kw">_</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>),
+        },
+        (<span class="number">0x0000</span>, <span class="number">0x10</span>) =&gt; <span class="kw">match</span> <span class="ident">c</span> {
+            <span class="string">&#39;\u{10A0}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{10C5}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_add</span>(<span class="number">0x1c60</span>)),
+            <span class="string">&#39;\u{10C7}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2D27</span>),
+            <span class="string">&#39;\u{10CD}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2D2D</span>),
+            <span class="kw">_</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>),
+        },
+        (<span class="number">0x0000</span>, <span class="number">0x13</span>) =&gt; <span class="kw">match</span> <span class="ident">c</span> {
+            <span class="string">&#39;\u{13F8}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{13FD}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_sub</span>(<span class="number">0x0008</span>)),
+            <span class="kw">_</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>),
+        },
+        (<span class="number">0x0000</span>, <span class="number">0x1C</span>) =&gt; <span class="kw">match</span> <span class="ident">c</span> {
+            <span class="string">&#39;\u{1C80}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0432</span>),
+            <span class="string">&#39;\u{1C81}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0434</span>),
+            <span class="string">&#39;\u{1C82}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x043E</span>),
+            <span class="string">&#39;\u{1C83}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{1C84}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_sub</span>(<span class="number">0x1842</span>)),
+            <span class="string">&#39;\u{1C85}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0442</span>),
+            <span class="string">&#39;\u{1C86}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x044A</span>),
+            <span class="string">&#39;\u{1C87}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0463</span>),
+            <span class="string">&#39;\u{1C88}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA64B</span>),
+            <span class="string">&#39;\u{1C90}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{1CBA}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_sub</span>(<span class="number">0x0bc0</span>)),
+            <span class="string">&#39;\u{1CBD}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{1CBF}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_sub</span>(<span class="number">0x0bc0</span>)),
+            <span class="kw">_</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>),
+        },
+        (<span class="number">0x0000</span>, <span class="number">0x1E</span>) =&gt; <span class="kw">match</span> <span class="ident">c</span> {
+            <span class="string">&#39;\u{1E00}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E01</span>),
+            <span class="string">&#39;\u{1E02}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E03</span>),
+            <span class="string">&#39;\u{1E04}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E05</span>),
+            <span class="string">&#39;\u{1E06}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E07</span>),
+            <span class="string">&#39;\u{1E08}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E09</span>),
+            <span class="string">&#39;\u{1E0A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E0B</span>),
+            <span class="string">&#39;\u{1E0C}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E0D</span>),
+            <span class="string">&#39;\u{1E0E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E0F</span>),
+            <span class="string">&#39;\u{1E10}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E11</span>),
+            <span class="string">&#39;\u{1E12}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E13</span>),
+            <span class="string">&#39;\u{1E14}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E15</span>),
+            <span class="string">&#39;\u{1E16}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E17</span>),
+            <span class="string">&#39;\u{1E18}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E19</span>),
+            <span class="string">&#39;\u{1E1A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E1B</span>),
+            <span class="string">&#39;\u{1E1C}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E1D</span>),
+            <span class="string">&#39;\u{1E1E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E1F</span>),
+            <span class="string">&#39;\u{1E20}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E21</span>),
+            <span class="string">&#39;\u{1E22}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E23</span>),
+            <span class="string">&#39;\u{1E24}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E25</span>),
+            <span class="string">&#39;\u{1E26}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E27</span>),
+            <span class="string">&#39;\u{1E28}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E29</span>),
+            <span class="string">&#39;\u{1E2A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E2B</span>),
+            <span class="string">&#39;\u{1E2C}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E2D</span>),
+            <span class="string">&#39;\u{1E2E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E2F</span>),
+            <span class="string">&#39;\u{1E30}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E31</span>),
+            <span class="string">&#39;\u{1E32}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E33</span>),
+            <span class="string">&#39;\u{1E34}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E35</span>),
+            <span class="string">&#39;\u{1E36}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E37</span>),
+            <span class="string">&#39;\u{1E38}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E39</span>),
+            <span class="string">&#39;\u{1E3A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E3B</span>),
+            <span class="string">&#39;\u{1E3C}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E3D</span>),
+            <span class="string">&#39;\u{1E3E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E3F</span>),
+            <span class="string">&#39;\u{1E40}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E41</span>),
+            <span class="string">&#39;\u{1E42}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E43</span>),
+            <span class="string">&#39;\u{1E44}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E45</span>),
+            <span class="string">&#39;\u{1E46}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E47</span>),
+            <span class="string">&#39;\u{1E48}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E49</span>),
+            <span class="string">&#39;\u{1E4A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E4B</span>),
+            <span class="string">&#39;\u{1E4C}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E4D</span>),
+            <span class="string">&#39;\u{1E4E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E4F</span>),
+            <span class="string">&#39;\u{1E50}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E51</span>),
+            <span class="string">&#39;\u{1E52}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E53</span>),
+            <span class="string">&#39;\u{1E54}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E55</span>),
+            <span class="string">&#39;\u{1E56}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E57</span>),
+            <span class="string">&#39;\u{1E58}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E59</span>),
+            <span class="string">&#39;\u{1E5A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E5B</span>),
+            <span class="string">&#39;\u{1E5C}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E5D</span>),
+            <span class="string">&#39;\u{1E5E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E5F</span>),
+            <span class="string">&#39;\u{1E60}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E61</span>),
+            <span class="string">&#39;\u{1E62}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E63</span>),
+            <span class="string">&#39;\u{1E64}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E65</span>),
+            <span class="string">&#39;\u{1E66}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E67</span>),
+            <span class="string">&#39;\u{1E68}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E69</span>),
+            <span class="string">&#39;\u{1E6A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E6B</span>),
+            <span class="string">&#39;\u{1E6C}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E6D</span>),
+            <span class="string">&#39;\u{1E6E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E6F</span>),
+            <span class="string">&#39;\u{1E70}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E71</span>),
+            <span class="string">&#39;\u{1E72}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E73</span>),
+            <span class="string">&#39;\u{1E74}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E75</span>),
+            <span class="string">&#39;\u{1E76}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E77</span>),
+            <span class="string">&#39;\u{1E78}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E79</span>),
+            <span class="string">&#39;\u{1E7A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E7B</span>),
+            <span class="string">&#39;\u{1E7C}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E7D</span>),
+            <span class="string">&#39;\u{1E7E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E7F</span>),
+            <span class="string">&#39;\u{1E80}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E81</span>),
+            <span class="string">&#39;\u{1E82}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E83</span>),
+            <span class="string">&#39;\u{1E84}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E85</span>),
+            <span class="string">&#39;\u{1E86}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E87</span>),
+            <span class="string">&#39;\u{1E88}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E89</span>),
+            <span class="string">&#39;\u{1E8A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E8B</span>),
+            <span class="string">&#39;\u{1E8C}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E8D</span>),
+            <span class="string">&#39;\u{1E8E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E8F</span>),
+            <span class="string">&#39;\u{1E90}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E91</span>),
+            <span class="string">&#39;\u{1E92}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E93</span>),
+            <span class="string">&#39;\u{1E94}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E95</span>),
+            <span class="string">&#39;\u{1E96}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="number">0x0068</span>, <span class="number">0x0331</span>),
+            <span class="string">&#39;\u{1E97}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="number">0x0074</span>, <span class="number">0x0308</span>),
+            <span class="string">&#39;\u{1E98}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="number">0x0077</span>, <span class="number">0x030A</span>),
+            <span class="string">&#39;\u{1E99}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="number">0x0079</span>, <span class="number">0x030A</span>),
+            <span class="string">&#39;\u{1E9A}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="number">0x0061</span>, <span class="number">0x02BE</span>),
+            <span class="string">&#39;\u{1E9B}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1E61</span>),
+            <span class="string">&#39;\u{1E9E}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="number">0x0073</span>, <span class="number">0x0073</span>),
+            <span class="string">&#39;\u{1EA0}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1EA1</span>),
+            <span class="string">&#39;\u{1EA2}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1EA3</span>),
+            <span class="string">&#39;\u{1EA4}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1EA5</span>),
+            <span class="string">&#39;\u{1EA6}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1EA7</span>),
+            <span class="string">&#39;\u{1EA8}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1EA9</span>),
+            <span class="string">&#39;\u{1EAA}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1EAB</span>),
+            <span class="string">&#39;\u{1EAC}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1EAD</span>),
+            <span class="string">&#39;\u{1EAE}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1EAF</span>),
+            <span class="string">&#39;\u{1EB0}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1EB1</span>),
+            <span class="string">&#39;\u{1EB2}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1EB3</span>),
+            <span class="string">&#39;\u{1EB4}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1EB5</span>),
+            <span class="string">&#39;\u{1EB6}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1EB7</span>),
+            <span class="string">&#39;\u{1EB8}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1EB9</span>),
+            <span class="string">&#39;\u{1EBA}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1EBB</span>),
+            <span class="string">&#39;\u{1EBC}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1EBD</span>),
+            <span class="string">&#39;\u{1EBE}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1EBF</span>),
+            <span class="string">&#39;\u{1EC0}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1EC1</span>),
+            <span class="string">&#39;\u{1EC2}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1EC3</span>),
+            <span class="string">&#39;\u{1EC4}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1EC5</span>),
+            <span class="string">&#39;\u{1EC6}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1EC7</span>),
+            <span class="string">&#39;\u{1EC8}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1EC9</span>),
+            <span class="string">&#39;\u{1ECA}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1ECB</span>),
+            <span class="string">&#39;\u{1ECC}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1ECD</span>),
+            <span class="string">&#39;\u{1ECE}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1ECF</span>),
+            <span class="string">&#39;\u{1ED0}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1ED1</span>),
+            <span class="string">&#39;\u{1ED2}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1ED3</span>),
+            <span class="string">&#39;\u{1ED4}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1ED5</span>),
+            <span class="string">&#39;\u{1ED6}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1ED7</span>),
+            <span class="string">&#39;\u{1ED8}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1ED9</span>),
+            <span class="string">&#39;\u{1EDA}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1EDB</span>),
+            <span class="string">&#39;\u{1EDC}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1EDD</span>),
+            <span class="string">&#39;\u{1EDE}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1EDF</span>),
+            <span class="string">&#39;\u{1EE0}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1EE1</span>),
+            <span class="string">&#39;\u{1EE2}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1EE3</span>),
+            <span class="string">&#39;\u{1EE4}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1EE5</span>),
+            <span class="string">&#39;\u{1EE6}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1EE7</span>),
+            <span class="string">&#39;\u{1EE8}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1EE9</span>),
+            <span class="string">&#39;\u{1EEA}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1EEB</span>),
+            <span class="string">&#39;\u{1EEC}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1EED</span>),
+            <span class="string">&#39;\u{1EEE}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1EEF</span>),
+            <span class="string">&#39;\u{1EF0}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1EF1</span>),
+            <span class="string">&#39;\u{1EF2}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1EF3</span>),
+            <span class="string">&#39;\u{1EF4}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1EF5</span>),
+            <span class="string">&#39;\u{1EF6}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1EF7</span>),
+            <span class="string">&#39;\u{1EF8}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1EF9</span>),
+            <span class="string">&#39;\u{1EFA}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1EFB</span>),
+            <span class="string">&#39;\u{1EFC}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1EFD</span>),
+            <span class="string">&#39;\u{1EFE}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1EFF</span>),
+            <span class="kw">_</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>),
+        },
+        (<span class="number">0x0000</span>, <span class="number">0x1F</span>) =&gt; <span class="kw">match</span> <span class="ident">c</span> {
+            <span class="string">&#39;\u{1F08}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{1F0F}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_sub</span>(<span class="number">0x0008</span>)),
+            <span class="string">&#39;\u{1F18}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{1F1D}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_sub</span>(<span class="number">0x0008</span>)),
+            <span class="string">&#39;\u{1F28}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{1F2F}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_sub</span>(<span class="number">0x0008</span>)),
+            <span class="string">&#39;\u{1F38}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{1F3F}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_sub</span>(<span class="number">0x0008</span>)),
+            <span class="string">&#39;\u{1F48}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{1F4D}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_sub</span>(<span class="number">0x0008</span>)),
+            <span class="string">&#39;\u{1F50}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="number">0x03C5</span>, <span class="number">0x0313</span>),
+            <span class="string">&#39;\u{1F52}&#39;</span> =&gt; <span class="ident">Mapping::Triple</span>(<span class="number">0x03C5</span>, <span class="number">0x0313</span>, <span class="number">0x0300</span>),
+            <span class="string">&#39;\u{1F54}&#39;</span> =&gt; <span class="ident">Mapping::Triple</span>(<span class="number">0x03C5</span>, <span class="number">0x0313</span>, <span class="number">0x0301</span>),
+            <span class="string">&#39;\u{1F56}&#39;</span> =&gt; <span class="ident">Mapping::Triple</span>(<span class="number">0x03C5</span>, <span class="number">0x0313</span>, <span class="number">0x0342</span>),
+            <span class="string">&#39;\u{1F59}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1F51</span>),
+            <span class="string">&#39;\u{1F5B}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1F53</span>),
+            <span class="string">&#39;\u{1F5D}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1F55</span>),
+            <span class="string">&#39;\u{1F5F}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1F57</span>),
+            <span class="string">&#39;\u{1F68}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{1F6F}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_sub</span>(<span class="number">0x0008</span>)),
+            <span class="string">&#39;\u{1F80}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{1F87}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_sub</span>(<span class="number">0x0080</span>), <span class="number">0x03B9</span>),
+            <span class="string">&#39;\u{1F88}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{1F8F}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_sub</span>(<span class="number">0x0088</span>), <span class="number">0x03B9</span>),
+            <span class="string">&#39;\u{1F90}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{1F97}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_sub</span>(<span class="number">0x0070</span>), <span class="number">0x03B9</span>),
+            <span class="string">&#39;\u{1F98}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{1F9F}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_sub</span>(<span class="number">0x0078</span>), <span class="number">0x03B9</span>),
+            <span class="string">&#39;\u{1FA0}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{1FA7}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_sub</span>(<span class="number">0x0040</span>), <span class="number">0x03B9</span>),
+            <span class="string">&#39;\u{1FA8}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{1FAF}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_sub</span>(<span class="number">0x0048</span>), <span class="number">0x03B9</span>),
+            <span class="string">&#39;\u{1FB2}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="number">0x1F70</span>, <span class="number">0x03B9</span>),
+            <span class="string">&#39;\u{1FB3}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="number">0x03B1</span>, <span class="number">0x03B9</span>),
+            <span class="string">&#39;\u{1FB4}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="number">0x03AC</span>, <span class="number">0x03B9</span>),
+            <span class="string">&#39;\u{1FB6}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="number">0x03B1</span>, <span class="number">0x0342</span>),
+            <span class="string">&#39;\u{1FB7}&#39;</span> =&gt; <span class="ident">Mapping::Triple</span>(<span class="number">0x03B1</span>, <span class="number">0x0342</span>, <span class="number">0x03B9</span>),
+            <span class="string">&#39;\u{1FB8}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{1FB9}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_sub</span>(<span class="number">0x0008</span>)),
+            <span class="string">&#39;\u{1FBA}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{1FBB}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_sub</span>(<span class="number">0x004a</span>)),
+            <span class="string">&#39;\u{1FBC}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="number">0x03B1</span>, <span class="number">0x03B9</span>),
+            <span class="string">&#39;\u{1FBE}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x03B9</span>),
+            <span class="string">&#39;\u{1FC2}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="number">0x1F74</span>, <span class="number">0x03B9</span>),
+            <span class="string">&#39;\u{1FC3}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="number">0x03B7</span>, <span class="number">0x03B9</span>),
+            <span class="string">&#39;\u{1FC4}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="number">0x03AE</span>, <span class="number">0x03B9</span>),
+            <span class="string">&#39;\u{1FC6}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="number">0x03B7</span>, <span class="number">0x0342</span>),
+            <span class="string">&#39;\u{1FC7}&#39;</span> =&gt; <span class="ident">Mapping::Triple</span>(<span class="number">0x03B7</span>, <span class="number">0x0342</span>, <span class="number">0x03B9</span>),
+            <span class="string">&#39;\u{1FC8}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{1FCB}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_sub</span>(<span class="number">0x0056</span>)),
+            <span class="string">&#39;\u{1FCC}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="number">0x03B7</span>, <span class="number">0x03B9</span>),
+            <span class="string">&#39;\u{1FD2}&#39;</span> =&gt; <span class="ident">Mapping::Triple</span>(<span class="number">0x03B9</span>, <span class="number">0x0308</span>, <span class="number">0x0300</span>),
+            <span class="string">&#39;\u{1FD3}&#39;</span> =&gt; <span class="ident">Mapping::Triple</span>(<span class="number">0x03B9</span>, <span class="number">0x0308</span>, <span class="number">0x0301</span>),
+            <span class="string">&#39;\u{1FD6}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="number">0x03B9</span>, <span class="number">0x0342</span>),
+            <span class="string">&#39;\u{1FD7}&#39;</span> =&gt; <span class="ident">Mapping::Triple</span>(<span class="number">0x03B9</span>, <span class="number">0x0308</span>, <span class="number">0x0342</span>),
+            <span class="string">&#39;\u{1FD8}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{1FD9}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_sub</span>(<span class="number">0x0008</span>)),
+            <span class="string">&#39;\u{1FDA}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{1FDB}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_sub</span>(<span class="number">0x0064</span>)),
+            <span class="string">&#39;\u{1FE2}&#39;</span> =&gt; <span class="ident">Mapping::Triple</span>(<span class="number">0x03C5</span>, <span class="number">0x0308</span>, <span class="number">0x0300</span>),
+            <span class="string">&#39;\u{1FE3}&#39;</span> =&gt; <span class="ident">Mapping::Triple</span>(<span class="number">0x03C5</span>, <span class="number">0x0308</span>, <span class="number">0x0301</span>),
+            <span class="string">&#39;\u{1FE4}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="number">0x03C1</span>, <span class="number">0x0313</span>),
+            <span class="string">&#39;\u{1FE6}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="number">0x03C5</span>, <span class="number">0x0342</span>),
+            <span class="string">&#39;\u{1FE7}&#39;</span> =&gt; <span class="ident">Mapping::Triple</span>(<span class="number">0x03C5</span>, <span class="number">0x0308</span>, <span class="number">0x0342</span>),
+            <span class="string">&#39;\u{1FE8}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{1FE9}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_sub</span>(<span class="number">0x0008</span>)),
+            <span class="string">&#39;\u{1FEA}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{1FEB}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_sub</span>(<span class="number">0x0070</span>)),
+            <span class="string">&#39;\u{1FEC}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1FE5</span>),
+            <span class="string">&#39;\u{1FF2}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="number">0x1F7C</span>, <span class="number">0x03B9</span>),
+            <span class="string">&#39;\u{1FF3}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="number">0x03C9</span>, <span class="number">0x03B9</span>),
+            <span class="string">&#39;\u{1FF4}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="number">0x03CE</span>, <span class="number">0x03B9</span>),
+            <span class="string">&#39;\u{1FF6}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="number">0x03C9</span>, <span class="number">0x0342</span>),
+            <span class="string">&#39;\u{1FF7}&#39;</span> =&gt; <span class="ident">Mapping::Triple</span>(<span class="number">0x03C9</span>, <span class="number">0x0342</span>, <span class="number">0x03B9</span>),
+            <span class="string">&#39;\u{1FF8}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{1FF9}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_sub</span>(<span class="number">0x0080</span>)),
+            <span class="string">&#39;\u{1FFA}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{1FFB}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_sub</span>(<span class="number">0x007e</span>)),
+            <span class="string">&#39;\u{1FFC}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="number">0x03C9</span>, <span class="number">0x03B9</span>),
+            <span class="kw">_</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>),
+        },
+        (<span class="number">0x0000</span>, <span class="number">0x21</span>) =&gt; <span class="kw">match</span> <span class="ident">c</span> {
+            <span class="string">&#39;\u{2126}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x03C9</span>),
+            <span class="string">&#39;\u{212A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x006B</span>),
+            <span class="string">&#39;\u{212B}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x00E5</span>),
+            <span class="string">&#39;\u{2132}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x214E</span>),
+            <span class="string">&#39;\u{2160}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{216F}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_add</span>(<span class="number">0x0010</span>)),
+            <span class="string">&#39;\u{2183}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2184</span>),
+            <span class="kw">_</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>),
+        },
+        (<span class="number">0x0000</span>, <span class="number">0x24</span>) =&gt; <span class="kw">match</span> <span class="ident">c</span> {
+            <span class="string">&#39;\u{24B6}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{24CF}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_add</span>(<span class="number">0x001a</span>)),
+            <span class="kw">_</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>),
+        },
+        (<span class="number">0x0000</span>, <span class="number">0x2C</span>) =&gt; <span class="kw">match</span> <span class="ident">c</span> {
+            <span class="string">&#39;\u{2C00}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{2C2F}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_add</span>(<span class="number">0x0030</span>)),
+            <span class="string">&#39;\u{2C60}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2C61</span>),
+            <span class="string">&#39;\u{2C62}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x026B</span>),
+            <span class="string">&#39;\u{2C63}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1D7D</span>),
+            <span class="string">&#39;\u{2C64}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x027D</span>),
+            <span class="string">&#39;\u{2C67}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2C68</span>),
+            <span class="string">&#39;\u{2C69}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2C6A</span>),
+            <span class="string">&#39;\u{2C6B}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2C6C</span>),
+            <span class="string">&#39;\u{2C6D}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0251</span>),
+            <span class="string">&#39;\u{2C6E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0271</span>),
+            <span class="string">&#39;\u{2C6F}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0250</span>),
+            <span class="string">&#39;\u{2C70}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0252</span>),
+            <span class="string">&#39;\u{2C72}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2C73</span>),
+            <span class="string">&#39;\u{2C75}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2C76</span>),
+            <span class="string">&#39;\u{2C7E}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{2C7F}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_sub</span>(<span class="number">0x2a3f</span>)),
+            <span class="string">&#39;\u{2C80}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2C81</span>),
+            <span class="string">&#39;\u{2C82}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2C83</span>),
+            <span class="string">&#39;\u{2C84}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2C85</span>),
+            <span class="string">&#39;\u{2C86}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2C87</span>),
+            <span class="string">&#39;\u{2C88}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2C89</span>),
+            <span class="string">&#39;\u{2C8A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2C8B</span>),
+            <span class="string">&#39;\u{2C8C}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2C8D</span>),
+            <span class="string">&#39;\u{2C8E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2C8F</span>),
+            <span class="string">&#39;\u{2C90}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2C91</span>),
+            <span class="string">&#39;\u{2C92}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2C93</span>),
+            <span class="string">&#39;\u{2C94}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2C95</span>),
+            <span class="string">&#39;\u{2C96}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2C97</span>),
+            <span class="string">&#39;\u{2C98}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2C99</span>),
+            <span class="string">&#39;\u{2C9A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2C9B</span>),
+            <span class="string">&#39;\u{2C9C}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2C9D</span>),
+            <span class="string">&#39;\u{2C9E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2C9F</span>),
+            <span class="string">&#39;\u{2CA0}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2CA1</span>),
+            <span class="string">&#39;\u{2CA2}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2CA3</span>),
+            <span class="string">&#39;\u{2CA4}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2CA5</span>),
+            <span class="string">&#39;\u{2CA6}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2CA7</span>),
+            <span class="string">&#39;\u{2CA8}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2CA9</span>),
+            <span class="string">&#39;\u{2CAA}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2CAB</span>),
+            <span class="string">&#39;\u{2CAC}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2CAD</span>),
+            <span class="string">&#39;\u{2CAE}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2CAF</span>),
+            <span class="string">&#39;\u{2CB0}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2CB1</span>),
+            <span class="string">&#39;\u{2CB2}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2CB3</span>),
+            <span class="string">&#39;\u{2CB4}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2CB5</span>),
+            <span class="string">&#39;\u{2CB6}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2CB7</span>),
+            <span class="string">&#39;\u{2CB8}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2CB9</span>),
+            <span class="string">&#39;\u{2CBA}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2CBB</span>),
+            <span class="string">&#39;\u{2CBC}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2CBD</span>),
+            <span class="string">&#39;\u{2CBE}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2CBF</span>),
+            <span class="string">&#39;\u{2CC0}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2CC1</span>),
+            <span class="string">&#39;\u{2CC2}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2CC3</span>),
+            <span class="string">&#39;\u{2CC4}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2CC5</span>),
+            <span class="string">&#39;\u{2CC6}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2CC7</span>),
+            <span class="string">&#39;\u{2CC8}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2CC9</span>),
+            <span class="string">&#39;\u{2CCA}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2CCB</span>),
+            <span class="string">&#39;\u{2CCC}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2CCD</span>),
+            <span class="string">&#39;\u{2CCE}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2CCF</span>),
+            <span class="string">&#39;\u{2CD0}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2CD1</span>),
+            <span class="string">&#39;\u{2CD2}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2CD3</span>),
+            <span class="string">&#39;\u{2CD4}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2CD5</span>),
+            <span class="string">&#39;\u{2CD6}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2CD7</span>),
+            <span class="string">&#39;\u{2CD8}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2CD9</span>),
+            <span class="string">&#39;\u{2CDA}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2CDB</span>),
+            <span class="string">&#39;\u{2CDC}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2CDD</span>),
+            <span class="string">&#39;\u{2CDE}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2CDF</span>),
+            <span class="string">&#39;\u{2CE0}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2CE1</span>),
+            <span class="string">&#39;\u{2CE2}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2CE3</span>),
+            <span class="string">&#39;\u{2CEB}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2CEC</span>),
+            <span class="string">&#39;\u{2CED}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2CEE</span>),
+            <span class="string">&#39;\u{2CF2}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x2CF3</span>),
+            <span class="kw">_</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>),
+        },
+        (<span class="number">0x0000</span>, <span class="number">0xA6</span>) =&gt; <span class="kw">match</span> <span class="ident">c</span> {
+            <span class="string">&#39;\u{A640}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA641</span>),
+            <span class="string">&#39;\u{A642}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA643</span>),
+            <span class="string">&#39;\u{A644}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA645</span>),
+            <span class="string">&#39;\u{A646}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA647</span>),
+            <span class="string">&#39;\u{A648}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA649</span>),
+            <span class="string">&#39;\u{A64A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA64B</span>),
+            <span class="string">&#39;\u{A64C}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA64D</span>),
+            <span class="string">&#39;\u{A64E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA64F</span>),
+            <span class="string">&#39;\u{A650}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA651</span>),
+            <span class="string">&#39;\u{A652}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA653</span>),
+            <span class="string">&#39;\u{A654}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA655</span>),
+            <span class="string">&#39;\u{A656}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA657</span>),
+            <span class="string">&#39;\u{A658}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA659</span>),
+            <span class="string">&#39;\u{A65A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA65B</span>),
+            <span class="string">&#39;\u{A65C}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA65D</span>),
+            <span class="string">&#39;\u{A65E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA65F</span>),
+            <span class="string">&#39;\u{A660}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA661</span>),
+            <span class="string">&#39;\u{A662}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA663</span>),
+            <span class="string">&#39;\u{A664}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA665</span>),
+            <span class="string">&#39;\u{A666}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA667</span>),
+            <span class="string">&#39;\u{A668}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA669</span>),
+            <span class="string">&#39;\u{A66A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA66B</span>),
+            <span class="string">&#39;\u{A66C}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA66D</span>),
+            <span class="string">&#39;\u{A680}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA681</span>),
+            <span class="string">&#39;\u{A682}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA683</span>),
+            <span class="string">&#39;\u{A684}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA685</span>),
+            <span class="string">&#39;\u{A686}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA687</span>),
+            <span class="string">&#39;\u{A688}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA689</span>),
+            <span class="string">&#39;\u{A68A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA68B</span>),
+            <span class="string">&#39;\u{A68C}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA68D</span>),
+            <span class="string">&#39;\u{A68E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA68F</span>),
+            <span class="string">&#39;\u{A690}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA691</span>),
+            <span class="string">&#39;\u{A692}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA693</span>),
+            <span class="string">&#39;\u{A694}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA695</span>),
+            <span class="string">&#39;\u{A696}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA697</span>),
+            <span class="string">&#39;\u{A698}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA699</span>),
+            <span class="string">&#39;\u{A69A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA69B</span>),
+            <span class="kw">_</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>),
+        },
+        (<span class="number">0x0000</span>, <span class="number">0xA7</span>) =&gt; <span class="kw">match</span> <span class="ident">c</span> {
+            <span class="string">&#39;\u{A722}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA723</span>),
+            <span class="string">&#39;\u{A724}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA725</span>),
+            <span class="string">&#39;\u{A726}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA727</span>),
+            <span class="string">&#39;\u{A728}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA729</span>),
+            <span class="string">&#39;\u{A72A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA72B</span>),
+            <span class="string">&#39;\u{A72C}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA72D</span>),
+            <span class="string">&#39;\u{A72E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA72F</span>),
+            <span class="string">&#39;\u{A732}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA733</span>),
+            <span class="string">&#39;\u{A734}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA735</span>),
+            <span class="string">&#39;\u{A736}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA737</span>),
+            <span class="string">&#39;\u{A738}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA739</span>),
+            <span class="string">&#39;\u{A73A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA73B</span>),
+            <span class="string">&#39;\u{A73C}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA73D</span>),
+            <span class="string">&#39;\u{A73E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA73F</span>),
+            <span class="string">&#39;\u{A740}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA741</span>),
+            <span class="string">&#39;\u{A742}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA743</span>),
+            <span class="string">&#39;\u{A744}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA745</span>),
+            <span class="string">&#39;\u{A746}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA747</span>),
+            <span class="string">&#39;\u{A748}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA749</span>),
+            <span class="string">&#39;\u{A74A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA74B</span>),
+            <span class="string">&#39;\u{A74C}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA74D</span>),
+            <span class="string">&#39;\u{A74E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA74F</span>),
+            <span class="string">&#39;\u{A750}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA751</span>),
+            <span class="string">&#39;\u{A752}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA753</span>),
+            <span class="string">&#39;\u{A754}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA755</span>),
+            <span class="string">&#39;\u{A756}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA757</span>),
+            <span class="string">&#39;\u{A758}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA759</span>),
+            <span class="string">&#39;\u{A75A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA75B</span>),
+            <span class="string">&#39;\u{A75C}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA75D</span>),
+            <span class="string">&#39;\u{A75E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA75F</span>),
+            <span class="string">&#39;\u{A760}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA761</span>),
+            <span class="string">&#39;\u{A762}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA763</span>),
+            <span class="string">&#39;\u{A764}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA765</span>),
+            <span class="string">&#39;\u{A766}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA767</span>),
+            <span class="string">&#39;\u{A768}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA769</span>),
+            <span class="string">&#39;\u{A76A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA76B</span>),
+            <span class="string">&#39;\u{A76C}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA76D</span>),
+            <span class="string">&#39;\u{A76E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA76F</span>),
+            <span class="string">&#39;\u{A779}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA77A</span>),
+            <span class="string">&#39;\u{A77B}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA77C</span>),
+            <span class="string">&#39;\u{A77D}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1D79</span>),
+            <span class="string">&#39;\u{A77E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA77F</span>),
+            <span class="string">&#39;\u{A780}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA781</span>),
+            <span class="string">&#39;\u{A782}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA783</span>),
+            <span class="string">&#39;\u{A784}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA785</span>),
+            <span class="string">&#39;\u{A786}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA787</span>),
+            <span class="string">&#39;\u{A78B}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA78C</span>),
+            <span class="string">&#39;\u{A78D}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0265</span>),
+            <span class="string">&#39;\u{A790}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA791</span>),
+            <span class="string">&#39;\u{A792}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA793</span>),
+            <span class="string">&#39;\u{A796}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA797</span>),
+            <span class="string">&#39;\u{A798}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA799</span>),
+            <span class="string">&#39;\u{A79A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA79B</span>),
+            <span class="string">&#39;\u{A79C}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA79D</span>),
+            <span class="string">&#39;\u{A79E}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA79F</span>),
+            <span class="string">&#39;\u{A7A0}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA7A1</span>),
+            <span class="string">&#39;\u{A7A2}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA7A3</span>),
+            <span class="string">&#39;\u{A7A4}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA7A5</span>),
+            <span class="string">&#39;\u{A7A6}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA7A7</span>),
+            <span class="string">&#39;\u{A7A8}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA7A9</span>),
+            <span class="string">&#39;\u{A7AA}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0266</span>),
+            <span class="string">&#39;\u{A7AB}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x025C</span>),
+            <span class="string">&#39;\u{A7AC}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0261</span>),
+            <span class="string">&#39;\u{A7AD}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x026C</span>),
+            <span class="string">&#39;\u{A7AE}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x026A</span>),
+            <span class="string">&#39;\u{A7B0}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x029E</span>),
+            <span class="string">&#39;\u{A7B1}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0287</span>),
+            <span class="string">&#39;\u{A7B2}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x029D</span>),
+            <span class="string">&#39;\u{A7B3}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xAB53</span>),
+            <span class="string">&#39;\u{A7B4}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA7B5</span>),
+            <span class="string">&#39;\u{A7B6}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA7B7</span>),
+            <span class="string">&#39;\u{A7B8}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA7B9</span>),
+            <span class="string">&#39;\u{A7BA}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA7BB</span>),
+            <span class="string">&#39;\u{A7BC}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA7BD</span>),
+            <span class="string">&#39;\u{A7BE}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA7BF</span>),
+            <span class="string">&#39;\u{A7C0}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA7C1</span>),
+            <span class="string">&#39;\u{A7C2}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA7C3</span>),
+            <span class="string">&#39;\u{A7C4}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA794</span>),
+            <span class="string">&#39;\u{A7C5}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x0282</span>),
+            <span class="string">&#39;\u{A7C6}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0x1D8E</span>),
+            <span class="string">&#39;\u{A7C7}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA7C8</span>),
+            <span class="string">&#39;\u{A7C9}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA7CA</span>),
+            <span class="string">&#39;\u{A7D0}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA7D1</span>),
+            <span class="string">&#39;\u{A7D6}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA7D7</span>),
+            <span class="string">&#39;\u{A7D8}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA7D9</span>),
+            <span class="string">&#39;\u{A7F5}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="number">0xA7F6</span>),
+            <span class="kw">_</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>),
+        },
+        (<span class="number">0x0000</span>, <span class="number">0xAB</span>) =&gt; <span class="kw">match</span> <span class="ident">c</span> {
+            <span class="string">&#39;\u{AB70}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{ABBF}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_sub</span>(<span class="number">0x97d0</span>)),
+            <span class="kw">_</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>),
+        },
+        (<span class="number">0x0000</span>, <span class="number">0xFB</span>) =&gt; <span class="kw">match</span> <span class="ident">c</span> {
+            <span class="string">&#39;\u{FB00}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="number">0x0066</span>, <span class="number">0x0066</span>),
+            <span class="string">&#39;\u{FB01}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="number">0x0066</span>, <span class="number">0x0069</span>),
+            <span class="string">&#39;\u{FB02}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="number">0x0066</span>, <span class="number">0x006C</span>),
+            <span class="string">&#39;\u{FB03}&#39;</span> =&gt; <span class="ident">Mapping::Triple</span>(<span class="number">0x0066</span>, <span class="number">0x0066</span>, <span class="number">0x0069</span>),
+            <span class="string">&#39;\u{FB04}&#39;</span> =&gt; <span class="ident">Mapping::Triple</span>(<span class="number">0x0066</span>, <span class="number">0x0066</span>, <span class="number">0x006C</span>),
+            <span class="string">&#39;\u{FB05}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="number">0x0073</span>, <span class="number">0x0074</span>),
+            <span class="string">&#39;\u{FB06}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="number">0x0073</span>, <span class="number">0x0074</span>),
+            <span class="string">&#39;\u{FB13}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="number">0x0574</span>, <span class="number">0x0576</span>),
+            <span class="string">&#39;\u{FB14}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="number">0x0574</span>, <span class="number">0x0565</span>),
+            <span class="string">&#39;\u{FB15}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="number">0x0574</span>, <span class="number">0x056B</span>),
+            <span class="string">&#39;\u{FB16}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="number">0x057E</span>, <span class="number">0x0576</span>),
+            <span class="string">&#39;\u{FB17}&#39;</span> =&gt; <span class="ident">Mapping::Double</span>(<span class="number">0x0574</span>, <span class="number">0x056D</span>),
+            <span class="kw">_</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>),
+        },
+        (<span class="number">0x0000</span>, <span class="number">0xFF</span>) =&gt; <span class="kw">match</span> <span class="ident">c</span> {
+            <span class="string">&#39;\u{FF21}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{FF3A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_add</span>(<span class="number">0x0020</span>)),
+            <span class="kw">_</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>),
+        },
+        (<span class="number">0x0001</span>, <span class="number">0x04</span>) =&gt; <span class="kw">match</span> <span class="ident">c</span> {
+            <span class="string">&#39;\u{10400}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{10427}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_add</span>(<span class="number">0x0028</span>)),
+            <span class="string">&#39;\u{104B0}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{104D3}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_add</span>(<span class="number">0x0028</span>)),
+            <span class="kw">_</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>),
+        },
+        (<span class="number">0x0001</span>, <span class="number">0x05</span>) =&gt; <span class="kw">match</span> <span class="ident">c</span> {
+            <span class="string">&#39;\u{10570}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{1057A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_add</span>(<span class="number">0x0027</span>)),
+            <span class="string">&#39;\u{1057C}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{1058A}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_add</span>(<span class="number">0x0027</span>)),
+            <span class="string">&#39;\u{1058C}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{10592}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_add</span>(<span class="number">0x0027</span>)),
+            <span class="string">&#39;\u{10594}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{10595}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_add</span>(<span class="number">0x0027</span>)),
+            <span class="kw">_</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>),
+        },
+        (<span class="number">0x0001</span>, <span class="number">0x0C</span>) =&gt; <span class="kw">match</span> <span class="ident">c</span> {
+            <span class="string">&#39;\u{10C80}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{10CB2}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_add</span>(<span class="number">0x0040</span>)),
+            <span class="kw">_</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>),
+        },
+        (<span class="number">0x0001</span>, <span class="number">0x18</span>) =&gt; <span class="kw">match</span> <span class="ident">c</span> {
+            <span class="string">&#39;\u{118A0}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{118BF}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_add</span>(<span class="number">0x0020</span>)),
+            <span class="kw">_</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>),
+        },
+        (<span class="number">0x0001</span>, <span class="number">0x6E</span>) =&gt; <span class="kw">match</span> <span class="ident">c</span> {
+            <span class="string">&#39;\u{16E40}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{16E5F}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_add</span>(<span class="number">0x0020</span>)),
+            <span class="kw">_</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>),
+        },
+        (<span class="number">0x0001</span>, <span class="number">0xE9</span>) =&gt; <span class="kw">match</span> <span class="ident">c</span> {
+            <span class="string">&#39;\u{1E900}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{1E921}&#39;</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>.<span class="ident">wrapping_add</span>(<span class="number">0x0022</span>)),
+            <span class="kw">_</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>),
+        },
+        <span class="kw">_</span> =&gt; <span class="ident">Mapping::Single</span>(<span class="ident">codepoint</span>),
+    }
+}
+</code></pre></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="focaccia" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (2f3ddd9f5 2022-06-27)" ></div>
+</body></html>

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"trait":[["TopSelf","Return a `Value`-wrapped reference to top self."]]};

@@ -1,0 +1,68 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="An implementation of Ruby’s pseudo-random number generator, or PRNG."><meta name="keywords" content="rust, rustlang, rust-lang, spinoso_random"><title>spinoso_random - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../dark.css" disabled><link rel="stylesheet" type="text/css" href="../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../storage.js"></script><script defer src="../crates.js"></script><script defer src="../main.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../favicon.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../spinoso_random/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"></h2>
+    </nav>
+    <nav class="sidebar"><a class="sidebar-logo" href="../spinoso_random/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"><a href="#">Crate spinoso_random</a></h2><div class="sidebar-elems"><div class="block"><ul><li class="version">Version 0.2.0</li><li><a id="all-types" href="all.html">All Items</a></li></ul></div><section><div class="block"><ul><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#functions">Functions</a></li></ul></div></section></div></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../spinoso_random/index.html"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
+                                <a href="../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../wheel.svg"></a></div>
+                        </div></form></nav></div><section id="main-content" class="content"><div class="main-heading">
+    <h1 class="fqn"><span class="in-band">Crate <a class="mod" href="#">spinoso_random</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span></h1><span class="out-of-band"><a class="srclink" href="../src/spinoso_random/lib.rs.html#1-531">source</a> · <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>An implementation of <a href="https://ruby-doc.org/core-2.6.3/Random.html">Ruby’s pseudo-random number generator</a>,
+or PRNG.</p>
+<p>The PRNG produces a deterministic sequence of bits which approximate true
+randomness. The sequence may be represented by integers, floats, or binary
+strings.</p>
+<p>The generator may be initialized with either a system-generated or
+user-supplied seed value.</p>
+<p>PRNGs are currently implemented as a modified Mersenne Twister with a period
+of 2**19937-1.</p>
+<h2 id="implementation-notes"><a href="#implementation-notes">Implementation notes</a></h2>
+<p>This RNG reproduces the same random bytes and floats as MRI. It may differ
+when returning elements confined to a distribution.</p>
+<h2 id="examples"><a href="#examples">Examples</a></h2>
+<p>Generate integers:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="ident">seed</span> <span class="op">=</span> [<span class="number">627457_u32</span>, <span class="number">697550</span>, <span class="number">16438</span>, <span class="number">41926</span>];
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">random</span> <span class="op">=</span> <span class="ident">Random::with_array_seed</span>(<span class="ident">seed</span>);
+<span class="kw">let</span> <span class="ident">rand</span> <span class="op">=</span> <span class="ident">random</span>.<span class="ident">next_int32</span>();</code></pre></div>
+<p>Generate random numbers in a range:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">random</span> <span class="op">=</span> <span class="ident">Random::new</span>()<span class="question-mark">?</span>;
+<span class="kw">let</span> <span class="ident">max</span> <span class="op">=</span> <span class="ident">Max::Integer</span>(<span class="number">10</span>);
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rand</span> <span class="op">=</span> <span class="ident">rand</span>(<span class="kw-2">&amp;mut</span> <span class="ident">random</span>, <span class="ident">max</span>)<span class="question-mark">?</span>;
+<span class="macro">assert!</span>(<span class="macro">matches!</span>(<span class="ident">rand</span>, <span class="ident">Rand::Integer</span>(<span class="ident">x</span>) <span class="kw">if</span> <span class="ident">x</span> <span class="op">&lt;</span> <span class="number">10</span>));</code></pre></div>
+<h2 id="no_std"><a href="#no_std"><code>no_std</code></a></h2>
+<p>This crate is <code>no_std</code> compatible when built without the <code>std</code> feature. This
+crate does not depend on <a href="https://doc.rust-lang.org/alloc/"><code>alloc</code></a>.</p>
+<h2 id="crate-features"><a href="#crate-features">Crate features</a></h2>
+<p>All features are enabled by default.</p>
+<ul>
+<li><strong>random-rand</strong> - Enables range sampling methods for the <a href="fn.rand.html" title="rand()"><code>rand()</code></a>
+function.  Activating this feature also activates the <strong>rand-traits</strong>
+feature. Dropping this feature removes the <a href="../rand/index.html"><code>rand</code></a> dependency.</li>
+<li><strong>rand-traits</strong> - Enables implementations of <a href="../rand_core/trait.RngCore.html"><code>RngCore</code></a> on the <a href="struct.Random.html" title="Random"><code>Random</code></a>
+type. Dropping this feature removes the <a href="../rand_core/index.html" title="rand_core"><code>rand_core</code></a> dependency.</li>
+<li><strong>std</strong> - Enables a dependency on the Rust Standard Library. Activating
+this feature enables <a href="https://doc.rust-lang.org/nightly/std/error/trait.Error.html" title="std::error::Error"><code>std::error::Error</code></a> impls on error types in this
+crate.</li>
+</ul>
+</div></details><h2 id="structs" class="small-section-header"><a href="#structs">Structs</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.ArgumentError.html" title="spinoso_random::ArgumentError struct">ArgumentError</a></div><div class="item-right docblock-short"><p>Error that indicates a random number could not be generated with the given
+bounds.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.InitializeError.html" title="spinoso_random::InitializeError struct">InitializeError</a></div><div class="item-right docblock-short"><p>Error that indicates a <code>Random</code> random number generator failed to
+initialize.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.NewSeedError.html" title="spinoso_random::NewSeedError struct">NewSeedError</a></div><div class="item-right docblock-short"><p>Error that indicates the system source of cryptographically secure
+randomness failed to read sufficient bytes to create a new seed.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Random.html" title="spinoso_random::Random struct">Random</a></div><div class="item-right docblock-short"><p>Random provides an interface to Ruby’s pseudo-random number generator, or
+PRNG.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.UrandomError.html" title="spinoso_random::UrandomError struct">UrandomError</a></div><div class="item-right docblock-short"><p>Error that indicates the system source of cryptographically secure
+randomness failed to read the requested bytes.</p>
+</div></div></div><h2 id="enums" class="small-section-header"><a href="#enums">Enums</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.Error.html" title="spinoso_random::Error enum">Error</a></div><div class="item-right docblock-short"><p>Sum type of all errors possibly returned from <code>Random</code> functions.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.Max.html" title="spinoso_random::Max enum">Max</a><span class="stab portability" title="Available on crate feature `random-rand` only"><code>random-rand</code></span></div><div class="item-right docblock-short"><p>A range constraint for generating random numbers.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.Rand.html" title="spinoso_random::Rand enum">Rand</a><span class="stab portability" title="Available on crate feature `random-rand` only"><code>random-rand</code></span></div><div class="item-right docblock-short"><p>A generated random number.</p>
+</div></div></div><h2 id="functions" class="small-section-header"><a href="#functions">Functions</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.new_seed.html" title="spinoso_random::new_seed fn">new_seed</a></div><div class="item-right docblock-short"><p>Read a new <a href="struct.Random.html" title="Random"><code>Random</code></a> seed, using platform-provided randomness.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.rand.html" title="spinoso_random::rand fn">rand</a><span class="stab portability" title="Available on crate feature `random-rand` only"><code>random-rand</code></span></div><div class="item-right docblock-short"><p>Generate random numbers bounded from below by 0 and above by the given max.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.seed_to_key.html" title="spinoso_random::seed_to_key fn">seed_to_key</a></div><div class="item-right docblock-short"><p>Convert a byte array into a reseeding key of <code>u32</code>s.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.urandom.html" title="spinoso_random::urandom fn">urandom</a></div><div class="item-right docblock-short"><p>Read random bytes, using platform-provided randomness.</p>
+</div></div></div></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="spinoso_random" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (2f3ddd9f5 2022-06-27)" ></div>
+</body></html>

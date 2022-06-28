@@ -1,0 +1,403 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `spinoso-exception/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../spinoso_exception/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"></h2>
+    </nav>
+    <nav class="sidebar"><a class="sidebar-logo" href="../../spinoso_exception/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
+        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../spinoso_exception/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
+                                <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
+                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<span id="2">2</span>
+<span id="3">3</span>
+<span id="4">4</span>
+<span id="5">5</span>
+<span id="6">6</span>
+<span id="7">7</span>
+<span id="8">8</span>
+<span id="9">9</span>
+<span id="10">10</span>
+<span id="11">11</span>
+<span id="12">12</span>
+<span id="13">13</span>
+<span id="14">14</span>
+<span id="15">15</span>
+<span id="16">16</span>
+<span id="17">17</span>
+<span id="18">18</span>
+<span id="19">19</span>
+<span id="20">20</span>
+<span id="21">21</span>
+<span id="22">22</span>
+<span id="23">23</span>
+<span id="24">24</span>
+<span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
+<span id="44">44</span>
+<span id="45">45</span>
+<span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
+<span id="50">50</span>
+<span id="51">51</span>
+<span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
+<span id="57">57</span>
+<span id="58">58</span>
+<span id="59">59</span>
+<span id="60">60</span>
+<span id="61">61</span>
+<span id="62">62</span>
+<span id="63">63</span>
+<span id="64">64</span>
+<span id="65">65</span>
+<span id="66">66</span>
+<span id="67">67</span>
+<span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
+<span id="71">71</span>
+<span id="72">72</span>
+<span id="73">73</span>
+<span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
+<span id="77">77</span>
+<span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
+<span id="86">86</span>
+<span id="87">87</span>
+<span id="88">88</span>
+<span id="89">89</span>
+<span id="90">90</span>
+<span id="91">91</span>
+<span id="92">92</span>
+<span id="93">93</span>
+<span id="94">94</span>
+<span id="95">95</span>
+<span id="96">96</span>
+<span id="97">97</span>
+<span id="98">98</span>
+<span id="99">99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+</pre><pre class="rust"><code><span class="attribute">#![<span class="ident">warn</span>(<span class="ident">clippy::all</span>)]</span>
+<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">clippy::pedantic</span>)]</span>
+<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">clippy::cargo</span>)]</span>
+<span class="attribute">#![<span class="ident">allow</span>(<span class="ident">unknown_lints</span>)]</span>
+<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">missing_docs</span>)]</span>
+<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">missing_debug_implementations</span>)]</span>
+<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">missing_copy_implementations</span>)]</span>
+<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">rust_2018_idioms</span>)]</span>
+<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">rust_2021_compatibility</span>)]</span>
+<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">trivial_casts</span>, <span class="ident">trivial_numeric_casts</span>)]</span>
+<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">unused_qualifications</span>)]</span>
+<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">variant_size_differences</span>)]</span>
+<span class="attribute">#![<span class="ident">forbid</span>(<span class="ident">unsafe_code</span>)]</span>
+<span class="comment">// Enable feature callouts in generated documentation:</span>
+<span class="comment">// https://doc.rust-lang.org/beta/unstable-book/language-features/doc-cfg.html</span>
+<span class="comment">//</span>
+<span class="comment">// This approach is borrowed from tokio.</span>
+<span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">docsrs</span>, <span class="ident">feature</span>(<span class="ident">doc_cfg</span>))]</span>
+<span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">docsrs</span>, <span class="ident">feature</span>(<span class="ident">doc_alias</span>))]</span>
+
+<span class="doccomment">//! Built in Ruby exception types.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Descendants of class [`Exception`] are used to communicate between</span>
+<span class="doccomment">//! [`Kernel#raise`] and `rescue` statements in `begin ... end` blocks.</span>
+<span class="doccomment">//! Exception objects carry information about the exception – its type (the</span>
+<span class="doccomment">//! exception&#39;s class name), an optional descriptive string, and optional</span>
+<span class="doccomment">//! traceback information. `Exception` subclasses may add additional information</span>
+<span class="doccomment">//! like [`NameError#name`].</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! # Ruby Exception Hierarchy</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! The built-in subclasses of [`Exception`] are:</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! - [`NoMemoryError`]</span>
+<span class="doccomment">//! - [`ScriptError`]</span>
+<span class="doccomment">//!   - [`LoadError`]</span>
+<span class="doccomment">//!   - [`NotImplementedError`]</span>
+<span class="doccomment">//!   - [`SyntaxError`]</span>
+<span class="doccomment">//! - [`SecurityError`]</span>
+<span class="doccomment">//! - [`SignalException`]</span>
+<span class="doccomment">//!   - [`Interrupt`]</span>
+<span class="doccomment">//! - [`StandardError`] — default for `rescue`</span>
+<span class="doccomment">//!   - [`ArgumentError`]</span>
+<span class="doccomment">//!     - [`UncaughtThrowError`]</span>
+<span class="doccomment">//!   - [`EncodingError`]</span>
+<span class="doccomment">//!   - [`FiberError`]</span>
+<span class="doccomment">//!   - [`IOError`]</span>
+<span class="doccomment">//!     - [`EOFError`]</span>
+<span class="doccomment">//!   - [`IndexError`]</span>
+<span class="doccomment">//!     - [`KeyError`]</span>
+<span class="doccomment">//!     - [`StopIteration`]</span>
+<span class="doccomment">//!   - [`LocalJumpError`]</span>
+<span class="doccomment">//!   - [`NameError`]</span>
+<span class="doccomment">//!     - [`NoMethodError`]</span>
+<span class="doccomment">//!   - [`RangeError`]</span>
+<span class="doccomment">//!     - [`FloatDomainError`]</span>
+<span class="doccomment">//!   - [`RegexpError`]</span>
+<span class="doccomment">//!   - [`RuntimeError`] — default for `raise`</span>
+<span class="doccomment">//!     - [`FrozenError`]</span>
+<span class="doccomment">//!   - [`SystemCallError`]</span>
+<span class="doccomment">//!     - `Errno::*`</span>
+<span class="doccomment">//!   - [`ThreadError`]</span>
+<span class="doccomment">//!   - [`TypeError`]</span>
+<span class="doccomment">//!   - [`ZeroDivisionError`]</span>
+<span class="doccomment">//! - [`SystemExit`]</span>
+<span class="doccomment">//! - [`SystemStackError`]</span>
+<span class="doccomment">//! - `fatal` — impossible to rescue</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! # `no_std`</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! This crate is `no_std` compatible when built without the `std` feature. This</span>
+<span class="doccomment">//! crate has a required dependency on [`alloc`].</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! # Crate features</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! All features are enabled by default.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! - **std** - Enables a dependency on the Rust Standard Library. Activating</span>
+<span class="doccomment">//!   this feature enables [`std::error::Error`] impls on error types in this</span>
+<span class="doccomment">//!   crate.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! [`Exception`]: https://ruby-doc.org/core-2.6.3/Exception.html</span>
+<span class="doccomment">//! [`Kernel#raise`]: https://ruby-doc.org/core-2.6.3/Kernel.html#method-i-raise</span>
+<span class="doccomment">//! [`NameError#name`]: https://ruby-doc.org/core-2.6.3/NameError.html#method-i-name</span>
+<span class="doccomment">//! [`NoMemoryError`]: https://ruby-doc.org/core-2.6.3/NoMemoryError.html</span>
+<span class="doccomment">//! [`ScriptError`]: https://ruby-doc.org/core-2.6.3/ScriptError.html</span>
+<span class="doccomment">//! [`LoadError`]: https://ruby-doc.org/core-2.6.3/LoadError.html</span>
+<span class="doccomment">//! [`NotImplementedError`]: https://ruby-doc.org/core-2.6.3/NotImplementedError.html</span>
+<span class="doccomment">//! [`SyntaxError`]: https://ruby-doc.org/core-2.6.3/SyntaxError.html</span>
+<span class="doccomment">//! [`SecurityError`]: https://ruby-doc.org/core-2.6.3/SecurityError.html</span>
+<span class="doccomment">//! [`SignalException`]: https://ruby-doc.org/core-2.6.3/SignalException.html</span>
+<span class="doccomment">//! [`Interrupt`]: https://ruby-doc.org/core-2.6.3/Interrupt.html</span>
+<span class="doccomment">//! [`StandardError`]: https://ruby-doc.org/core-2.6.3/StandardError.html</span>
+<span class="doccomment">//! [`ArgumentError`]: https://ruby-doc.org/core-2.6.3/ArgumentError.html</span>
+<span class="doccomment">//! [`UncaughtThrowError`]: https://ruby-doc.org/core-2.6.3/UncaughtThrowError.html</span>
+<span class="doccomment">//! [`EncodingError`]: https://ruby-doc.org/core-2.6.3/EncodingError.html</span>
+<span class="doccomment">//! [`FiberError`]: https://ruby-doc.org/core-2.6.3/FiberError.html</span>
+<span class="doccomment">//! [`IOError`]: https://ruby-doc.org/core-2.6.3/IOError.html</span>
+<span class="doccomment">//! [`EOFError`]: https://ruby-doc.org/core-2.6.3/EOFError.html</span>
+<span class="doccomment">//! [`IndexError`]: https://ruby-doc.org/core-2.6.3/IndexError.html</span>
+<span class="doccomment">//! [`KeyError`]: https://ruby-doc.org/core-2.6.3/KeyError.html</span>
+<span class="doccomment">//! [`StopIteration`]: https://ruby-doc.org/core-2.6.3/StopIteration.html</span>
+<span class="doccomment">//! [`LocalJumpError`]: https://ruby-doc.org/core-2.6.3/LocalJumpError.html</span>
+<span class="doccomment">//! [`NameError`]: https://ruby-doc.org/core-2.6.3/NameError.html</span>
+<span class="doccomment">//! [`NoMethodError`]: https://ruby-doc.org/core-2.6.3/NoMethodError.html</span>
+<span class="doccomment">//! [`RangeError`]: https://ruby-doc.org/core-2.6.3/RangeError.html</span>
+<span class="doccomment">//! [`FloatDomainError`]: https://ruby-doc.org/core-2.6.3/FloatDomainError.html</span>
+<span class="doccomment">//! [`RegexpError`]: https://ruby-doc.org/core-2.6.3/RegexpError.html</span>
+<span class="doccomment">//! [`RuntimeError`]: https://ruby-doc.org/core-2.6.3/RuntimeError.html</span>
+<span class="doccomment">//! [`FrozenError`]: https://ruby-doc.org/core-2.6.3/FrozenError.html</span>
+<span class="doccomment">//! [`SystemCallError`]: https://ruby-doc.org/core-2.6.3/SystemCallError.html</span>
+<span class="doccomment">//! [`ThreadError`]: https://ruby-doc.org/core-2.6.3/ThreadError.html</span>
+<span class="doccomment">//! [`TypeError`]: https://ruby-doc.org/core-2.6.3/TypeError.html</span>
+<span class="doccomment">//! [`ZeroDivisionError`]: https://ruby-doc.org/core-2.6.3/ZeroDivisionError.html</span>
+<span class="doccomment">//! [`SystemExit`]: https://ruby-doc.org/core-2.6.3/SystemExit.html</span>
+<span class="doccomment">//! [`SystemStackError`]: https://ruby-doc.org/core-2.6.3/SystemStackError.html</span>
+
+<span class="attribute">#![<span class="ident">no_std</span>]</span>
+
+<span class="comment">// Ensure code blocks in `README.md` compile</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">doctest</span>)]</span>
+<span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="macro">include_str!</span>(<span class="string">&quot;../README.md&quot;</span>)]</span>
+<span class="kw">mod</span> <span class="ident">readme</span> {}
+
+<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">alloc</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>)]</span>
+<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">std</span>;
+
+<span class="kw">use</span> <span class="ident">alloc::borrow::Cow</span>;
+
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">core</span>;
+
+<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">inline</span>)]</span>
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::core</span>::<span class="kw-2">*</span>;
+
+<span class="doccomment">/// Polymorphic exception type that corresponds to Ruby&#39;s `Exception`.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// This trait unifies all concrete exception types defined in this crate and is</span>
+<span class="doccomment">/// [object safe]. This means `RubyException` can be used as a trait object to</span>
+<span class="doccomment">/// represent an error type of any set of exception subclasses.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// All types that implement `RubyException` should be `raise`able in an</span>
+<span class="doccomment">/// Artichoke Ruby VM.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// # Examples</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">/// # use spinoso_exception::*;</span>
+<span class="doccomment">/// # struct Array(()); impl Array { pub fn is_frozen(&amp;self) -&gt; bool { true } }</span>
+<span class="doccomment">/// fn array_concat(slf: Array, other: Array) -&gt; Result&lt;Array, Box&lt;dyn RubyException&gt;&gt; {</span>
+<span class="doccomment">///     if slf.is_frozen() {</span>
+<span class="doccomment">///         return Err(Box::new(FrozenError::new()));</span>
+<span class="doccomment">///     }</span>
+<span class="doccomment">///     Err(Box::new(NotImplementedError::new()))</span>
+<span class="doccomment">/// }</span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// [object safe]: https://doc.rust-lang.org/book/ch17-02-trait-objects.html#object-safety-is-required-for-trait-objects</span>
+<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">RubyException</span> {
+    <span class="doccomment">/// The exception&#39;s message.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Examples</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// ```</span>
+    <span class="doccomment">/// # use spinoso_exception::*;</span>
+    <span class="doccomment">/// fn exception_inspect(exc: &amp;dyn RubyException) {</span>
+    <span class="doccomment">///     let message = exc.message();</span>
+    <span class="doccomment">///     let message = String::from_utf8_lossy(&amp;message);</span>
+    <span class="doccomment">///     println!(&quot;{} ({})&quot;, exc.name(), message);</span>
+    <span class="doccomment">/// }</span>
+    <span class="doccomment">/// ```</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Implementation notes</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// This method returns a byte slice since Ruby `String`s are best</span>
+    <span class="doccomment">/// represented as a [`Vec&lt;u8&gt;`].</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// [`Vec&lt;u8&gt;`]: alloc::vec::Vec</span>
+    <span class="kw">fn</span> <span class="ident">message</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, [<span class="ident">u8</span>]<span class="op">&gt;</span>;
+
+    <span class="doccomment">/// The exception&#39;s class name.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Examples</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// ```</span>
+    <span class="doccomment">/// # use spinoso_exception::*;</span>
+    <span class="doccomment">/// fn exception_inspect(exc: &amp;dyn RubyException) {</span>
+    <span class="doccomment">///     let message = exc.message();</span>
+    <span class="doccomment">///     let message = String::from_utf8_lossy(&amp;message);</span>
+    <span class="doccomment">///     println!(&quot;{} ({})&quot;, exc.name(), message);</span>
+    <span class="doccomment">/// }</span>
+    <span class="doccomment">/// ```</span>
+    <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">str</span><span class="op">&gt;</span>;
+}
+
+<span class="comment">// Assert that `RubyException` is object-safe (i.e. supports dynamic dispatch).</span>
+<span class="kw">const</span> <span class="kw">_</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">RubyException</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">None</span>;
+</code></pre></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="spinoso_exception" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (2f3ddd9f5 2022-06-27)" ></div>
+</body></html>

@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["artichoke_backend"] = [{"text":"impl <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/ops/range/trait.RangeBounds.html\" title=\"trait core::ops::range::RangeBounds\">RangeBounds</a>&lt;<a class=\"primitive\" href=\"https://doc.rust-lang.org/nightly/std/primitive.usize.html\">usize</a>&gt; for <a class=\"struct\" href=\"artichoke_backend/extn/core/matchdata/struct.Region.html\" title=\"struct artichoke_backend::extn::core::matchdata::Region\">Region</a>","synthetic":false,"types":["artichoke_backend::extn::core::matchdata::Region"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

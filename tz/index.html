@@ -1,0 +1,179 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="This crate provides the [`TimeZone`] and [`DateTime`] types, which can be used to determine local time on a given time zone."><meta name="keywords" content="rust, rustlang, rust-lang, tz"><title>tz - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../dark.css" disabled><link rel="stylesheet" type="text/css" href="../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../storage.js"></script><script defer src="../crates.js"></script><script defer src="../main.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../favicon.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../tz/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"></h2>
+    </nav>
+    <nav class="sidebar"><a class="sidebar-logo" href="../tz/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"><a href="#">Crate tz</a></h2><div class="sidebar-elems"><div class="block"><ul><li class="version">Version 0.6.9</li><li><a id="all-types" href="all.html">All Items</a></li></ul></div><section><div class="block"><ul><li><a href="#reexports">Re-exports</a></li><li><a href="#modules">Modules</a></li><li><a href="#types">Type Definitions</a></li></ul></div></section></div></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../tz/index.html"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
+                                <a href="../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../wheel.svg"></a></div>
+                        </div></form></nav></div><section id="main-content" class="content"><div class="main-heading">
+    <h1 class="fqn"><span class="in-band">Crate <a class="mod" href="#">tz</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span></h1><span class="out-of-band"><a class="srclink" href="../src/tz/lib.rs.html#1-198">source</a> · <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>This crate provides the <a href="timezone/struct.TimeZone.html" title="TimeZone"><code>TimeZone</code></a> and <a href="datetime/struct.DateTime.html" title="DateTime"><code>DateTime</code></a> types, which can be used to determine local time on a given time zone.</p>
+<p>This allows to convert between an <a href="https://en.wikipedia.org/wiki/Unix_time">Unix timestamp</a> and a calendar time exprimed in the <a href="https://en.wikipedia.org/wiki/Proleptic_Gregorian_calendar">proleptic gregorian calendar</a> with a provided time zone.</p>
+<p>Time zones are provided to the library with a <a href="https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap08.html">POSIX <code>TZ</code> string</a> which can be read from the environment.</p>
+<p>Two formats are currently accepted for the <code>TZ</code> string:</p>
+<ul>
+<li><code>std offset[dst[offset][,start[/time],end[/time]]]</code> providing a time zone description,</li>
+<li><code>file</code> or <code>:file</code> providing the path to a <a href="https://datatracker.ietf.org/doc/html/rfc8536">TZif file</a>, which is absolute or relative to the system timezone directory.</li>
+</ul>
+<p>See also the <a href="https://man7.org/linux/man-pages/man3/tzset.3.html">Linux manual page of tzset(3)</a> and the <a href="https://www.gnu.org/software/libc/manual/html_node/TZ-Variable.html">glibc documentation of the <code>TZ</code> environment variable</a>.</p>
+<h2 id="usage"><a href="#usage">Usage</a></h2><h3 id="time-zone"><a href="#time-zone">Time zone</a></h3>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">tz::TimeZone</span>;
+
+<span class="comment">// 2000-01-01T00:00:00Z</span>
+<span class="kw">let</span> <span class="ident">unix_time</span> <span class="op">=</span> <span class="number">946684800</span>;
+
+<span class="comment">// Get UTC time zone</span>
+<span class="kw">let</span> <span class="ident">time_zone_utc</span> <span class="op">=</span> <span class="ident">TimeZone::utc</span>();
+<span class="macro">assert_eq!</span>(<span class="ident">time_zone_utc</span>.<span class="ident">find_local_time_type</span>(<span class="ident">unix_time</span>)<span class="question-mark">?</span>.<span class="ident">ut_offset</span>(), <span class="number">0</span>);
+
+<span class="comment">// Get fixed time zone at GMT-1</span>
+<span class="kw">let</span> <span class="ident">time_zone_fixed</span> <span class="op">=</span> <span class="ident">TimeZone::fixed</span>(<span class="op">-</span><span class="number">3600</span>)<span class="question-mark">?</span>;
+<span class="macro">assert_eq!</span>(<span class="ident">time_zone_fixed</span>.<span class="ident">find_local_time_type</span>(<span class="ident">unix_time</span>)<span class="question-mark">?</span>.<span class="ident">ut_offset</span>(), <span class="op">-</span><span class="number">3600</span>);
+
+<span class="comment">// Get local time zone (UNIX only)</span>
+<span class="kw">let</span> <span class="ident">time_zone_local</span> <span class="op">=</span> <span class="ident">TimeZone::local</span>()<span class="question-mark">?</span>;
+<span class="comment">// Get the current local time type</span>
+<span class="kw">let</span> <span class="ident">_current_local_time_type</span> <span class="op">=</span> <span class="ident">time_zone_local</span>.<span class="ident">find_current_local_time_type</span>()<span class="question-mark">?</span>;
+
+<span class="comment">// Get time zone from a TZ string:</span>
+<span class="comment">// From an absolute file</span>
+<span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">TimeZone::from_posix_tz</span>(<span class="string">&quot;/usr/share/zoneinfo/Pacific/Auckland&quot;</span>);
+<span class="comment">// From a file relative to the system timezone directory</span>
+<span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">TimeZone::from_posix_tz</span>(<span class="string">&quot;Pacific/Auckland&quot;</span>);
+<span class="comment">// From a time zone description</span>
+<span class="ident">TimeZone::from_posix_tz</span>(<span class="string">&quot;HST10&quot;</span>)<span class="question-mark">?</span>;
+<span class="ident">TimeZone::from_posix_tz</span>(<span class="string">&quot;&lt;-03&gt;3&quot;</span>)<span class="question-mark">?</span>;
+<span class="ident">TimeZone::from_posix_tz</span>(<span class="string">&quot;NZST-12:00:00NZDT-13:00:00,M10.1.0,M3.3.0&quot;</span>)<span class="question-mark">?</span>;
+<span class="comment">// Use a leading colon to force searching for a corresponding file</span>
+<span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">TimeZone::from_posix_tz</span>(<span class="string">&quot;:UTC&quot;</span>);</code></pre></div>
+<h3 id="date-time"><a href="#date-time">Date time</a></h3>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">tz</span>::{<span class="ident">DateTime</span>, <span class="ident">LocalTimeType</span>, <span class="ident">TimeZone</span>, <span class="ident">UtcDateTime</span>};
+
+<span class="comment">// Get the current UTC date time</span>
+<span class="kw">let</span> <span class="ident">_current_utc_date_time</span> <span class="op">=</span> <span class="ident">UtcDateTime::now</span>()<span class="question-mark">?</span>;
+
+<span class="comment">// Create a new UTC date time (2000-01-01T00:00:00.123456789Z)</span>
+<span class="kw">let</span> <span class="ident">utc_date_time</span> <span class="op">=</span> <span class="ident">UtcDateTime::new</span>(<span class="number">2000</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">123_456_789</span>)<span class="question-mark">?</span>;
+<span class="macro">assert_eq!</span>(<span class="ident">utc_date_time</span>.<span class="ident">year</span>(), <span class="number">2000</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">utc_date_time</span>.<span class="ident">month</span>(), <span class="number">1</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">utc_date_time</span>.<span class="ident">month_day</span>(), <span class="number">1</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">utc_date_time</span>.<span class="ident">hour</span>(), <span class="number">0</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">utc_date_time</span>.<span class="ident">minute</span>(), <span class="number">0</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">utc_date_time</span>.<span class="ident">second</span>(), <span class="number">0</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">utc_date_time</span>.<span class="ident">week_day</span>(), <span class="number">6</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">utc_date_time</span>.<span class="ident">year_day</span>(), <span class="number">0</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">utc_date_time</span>.<span class="ident">unix_time</span>(), <span class="number">946684800</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">utc_date_time</span>.<span class="ident">nanoseconds</span>(), <span class="number">123_456_789</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">utc_date_time</span>.<span class="ident">to_string</span>(), <span class="string">&quot;2000-01-01T00:00:00.123456789Z&quot;</span>);
+
+<span class="comment">// Create a new UTC date time from a Unix time with nanoseconds (2000-01-01T00:00:00.123456789Z)</span>
+<span class="kw">let</span> <span class="ident">other_utc_date_time</span> <span class="op">=</span> <span class="ident">UtcDateTime::from_timespec</span>(<span class="number">946684800</span>, <span class="number">123_456_789</span>)<span class="question-mark">?</span>;
+<span class="macro">assert_eq!</span>(<span class="ident">other_utc_date_time</span>, <span class="ident">utc_date_time</span>);
+
+<span class="comment">// Project the UTC date time to a time zone</span>
+<span class="kw">let</span> <span class="ident">date_time</span> <span class="op">=</span> <span class="ident">utc_date_time</span>.<span class="ident">project</span>(<span class="ident">TimeZone::fixed</span>(<span class="op">-</span><span class="number">3600</span>)<span class="question-mark">?</span>.<span class="ident">as_ref</span>())<span class="question-mark">?</span>;
+<span class="macro">assert_eq!</span>(<span class="ident">date_time</span>.<span class="ident">year</span>(), <span class="number">1999</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">date_time</span>.<span class="ident">month</span>(), <span class="number">12</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">date_time</span>.<span class="ident">month_day</span>(), <span class="number">31</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">date_time</span>.<span class="ident">hour</span>(), <span class="number">23</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">date_time</span>.<span class="ident">minute</span>(), <span class="number">0</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">date_time</span>.<span class="ident">second</span>(), <span class="number">0</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">date_time</span>.<span class="ident">week_day</span>(), <span class="number">5</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">date_time</span>.<span class="ident">year_day</span>(), <span class="number">364</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">date_time</span>.<span class="ident">local_time_type</span>().<span class="ident">ut_offset</span>(), <span class="op">-</span><span class="number">3600</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">date_time</span>.<span class="ident">unix_time</span>(), <span class="number">946684800</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">date_time</span>.<span class="ident">nanoseconds</span>(), <span class="number">123_456_789</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">date_time</span>.<span class="ident">to_string</span>(), <span class="string">&quot;1999-12-31T23:00:00.123456789-01:00&quot;</span>);
+
+<span class="comment">// Project the date time to another time zone</span>
+<span class="kw">let</span> <span class="ident">other_date_time</span> <span class="op">=</span> <span class="ident">date_time</span>.<span class="ident">project</span>(<span class="ident">TimeZone::fixed</span>(<span class="number">3600</span>)<span class="question-mark">?</span>.<span class="ident">as_ref</span>())<span class="question-mark">?</span>;
+<span class="macro">assert_eq!</span>(<span class="ident">other_date_time</span>.<span class="ident">year</span>(), <span class="number">2000</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">other_date_time</span>.<span class="ident">month</span>(), <span class="number">1</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">other_date_time</span>.<span class="ident">month_day</span>(), <span class="number">1</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">other_date_time</span>.<span class="ident">hour</span>(), <span class="number">1</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">other_date_time</span>.<span class="ident">minute</span>(), <span class="number">0</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">other_date_time</span>.<span class="ident">second</span>(), <span class="number">0</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">other_date_time</span>.<span class="ident">week_day</span>(), <span class="number">6</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">other_date_time</span>.<span class="ident">year_day</span>(), <span class="number">0</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">other_date_time</span>.<span class="ident">local_time_type</span>().<span class="ident">ut_offset</span>(), <span class="number">3600</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">other_date_time</span>.<span class="ident">unix_time</span>(), <span class="number">946684800</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">other_date_time</span>.<span class="ident">nanoseconds</span>(), <span class="number">123_456_789</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">other_date_time</span>.<span class="ident">to_string</span>(), <span class="string">&quot;2000-01-01T01:00:00.123456789+01:00&quot;</span>);
+
+<span class="comment">// Create a new date time from a Unix time with nanoseconds and a time zone (2000-01-01T00:00:00.123456789Z)</span>
+<span class="kw">let</span> <span class="ident">another_date_time</span> <span class="op">=</span> <span class="ident">DateTime::from_timespec</span>(<span class="number">946684800</span>, <span class="number">123_456_789</span>, <span class="ident">TimeZone::fixed</span>(<span class="number">86400</span>)<span class="question-mark">?</span>.<span class="ident">as_ref</span>())<span class="question-mark">?</span>;
+
+<span class="comment">// DateTime objects are compared by their Unix time and nanoseconds</span>
+<span class="macro">assert_eq!</span>(<span class="ident">another_date_time</span>, <span class="ident">other_date_time</span>);
+
+<span class="comment">// Get the current date time at the local time zone (UNIX only)</span>
+<span class="kw">let</span> <span class="ident">time_zone_local</span> <span class="op">=</span> <span class="ident">TimeZone::local</span>()<span class="question-mark">?</span>;
+<span class="kw">let</span> <span class="ident">_date_time</span> <span class="op">=</span> <span class="ident">DateTime::now</span>(<span class="ident">time_zone_local</span>.<span class="ident">as_ref</span>())<span class="question-mark">?</span>;
+
+<span class="comment">// Create a new date time with an UTC offset (2000-01-01T01:00:00.123456789+01:00)</span>
+<span class="kw">let</span> <span class="ident">date_time</span> <span class="op">=</span> <span class="ident">DateTime::new</span>(<span class="number">2000</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">123_456_789</span>, <span class="ident">LocalTimeType::with_ut_offset</span>(<span class="number">3600</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+<span class="macro">assert_eq!</span>(<span class="ident">date_time</span>.<span class="ident">year</span>(), <span class="number">2000</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">date_time</span>.<span class="ident">month</span>(), <span class="number">1</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">date_time</span>.<span class="ident">month_day</span>(), <span class="number">1</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">date_time</span>.<span class="ident">hour</span>(), <span class="number">1</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">date_time</span>.<span class="ident">minute</span>(), <span class="number">0</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">date_time</span>.<span class="ident">second</span>(), <span class="number">0</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">date_time</span>.<span class="ident">week_day</span>(), <span class="number">6</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">date_time</span>.<span class="ident">year_day</span>(), <span class="number">0</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">date_time</span>.<span class="ident">unix_time</span>(), <span class="number">946684800</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">date_time</span>.<span class="ident">nanoseconds</span>(), <span class="number">123_456_789</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">date_time</span>.<span class="ident">to_string</span>(), <span class="string">&quot;2000-01-01T01:00:00.123456789+01:00&quot;</span>);
+
+<span class="comment">//</span>
+<span class="comment">// Find the possible date times corresponding to a date, a time and a time zone</span>
+<span class="comment">//</span>
+<span class="kw">let</span> <span class="ident">time_zone</span> <span class="op">=</span> <span class="ident">TimeZone::from_posix_tz</span>(<span class="string">&quot;CET-1CEST,M3.5.0,M10.5.0/3&quot;</span>)<span class="question-mark">?</span>;
+
+<span class="comment">// Found date time is unique</span>
+<span class="kw">let</span> <span class="ident">found_date_times</span> <span class="op">=</span> <span class="ident">DateTime::find</span>(<span class="number">2000</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="ident">time_zone</span>.<span class="ident">as_ref</span>())<span class="question-mark">?</span>;
+<span class="kw">let</span> <span class="ident">unique</span> <span class="op">=</span> <span class="ident">found_date_times</span>.<span class="ident">unique</span>().<span class="ident">unwrap</span>();
+<span class="macro">assert_eq!</span>(<span class="ident">unique</span>, <span class="ident">found_date_times</span>.<span class="ident">earliest</span>().<span class="ident">unwrap</span>());
+<span class="macro">assert_eq!</span>(<span class="ident">unique</span>, <span class="ident">found_date_times</span>.<span class="ident">latest</span>().<span class="ident">unwrap</span>());
+<span class="macro">assert_eq!</span>(<span class="ident">unique</span>.<span class="ident">local_time_type</span>().<span class="ident">ut_offset</span>(), <span class="number">3600</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">unique</span>.<span class="ident">local_time_type</span>().<span class="ident">time_zone_designation</span>(), <span class="string">&quot;CET&quot;</span>);
+
+<span class="comment">// Found date time was skipped by a forward transition</span>
+<span class="kw">let</span> <span class="ident">found_date_times</span> <span class="op">=</span> <span class="ident">DateTime::find</span>(<span class="number">2000</span>, <span class="number">3</span>, <span class="number">26</span>, <span class="number">2</span>, <span class="number">30</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="ident">time_zone</span>.<span class="ident">as_ref</span>())<span class="question-mark">?</span>;
+
+<span class="macro">assert_eq!</span>(<span class="ident">found_date_times</span>.<span class="ident">unique</span>(), <span class="prelude-val">None</span>);
+
+<span class="kw">let</span> <span class="ident">earliest</span> <span class="op">=</span> <span class="ident">found_date_times</span>.<span class="ident">earliest</span>().<span class="ident">unwrap</span>();
+<span class="macro">assert_eq!</span>(<span class="ident">earliest</span>.<span class="ident">hour</span>(), <span class="number">2</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">earliest</span>.<span class="ident">minute</span>(), <span class="number">0</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">earliest</span>.<span class="ident">local_time_type</span>().<span class="ident">ut_offset</span>(), <span class="number">3600</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">earliest</span>.<span class="ident">local_time_type</span>().<span class="ident">time_zone_designation</span>(), <span class="string">&quot;CET&quot;</span>);
+
+<span class="kw">let</span> <span class="ident">latest</span> <span class="op">=</span> <span class="ident">found_date_times</span>.<span class="ident">latest</span>().<span class="ident">unwrap</span>();
+<span class="macro">assert_eq!</span>(<span class="ident">latest</span>.<span class="ident">hour</span>(), <span class="number">3</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">latest</span>.<span class="ident">minute</span>(), <span class="number">0</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">latest</span>.<span class="ident">local_time_type</span>().<span class="ident">ut_offset</span>(), <span class="number">7200</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">latest</span>.<span class="ident">local_time_type</span>().<span class="ident">time_zone_designation</span>(), <span class="string">&quot;CEST&quot;</span>);
+
+<span class="comment">// Found date time is ambiguous because of a backward transition</span>
+<span class="kw">let</span> <span class="ident">found_date_times</span> <span class="op">=</span> <span class="ident">DateTime::find</span>(<span class="number">2000</span>, <span class="number">10</span>, <span class="number">29</span>, <span class="number">2</span>, <span class="number">30</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="ident">time_zone</span>.<span class="ident">as_ref</span>())<span class="question-mark">?</span>;
+
+<span class="macro">assert_eq!</span>(<span class="ident">found_date_times</span>.<span class="ident">unique</span>(), <span class="prelude-val">None</span>);
+
+<span class="kw">let</span> <span class="ident">earliest</span> <span class="op">=</span> <span class="ident">found_date_times</span>.<span class="ident">earliest</span>().<span class="ident">unwrap</span>();
+<span class="macro">assert_eq!</span>(<span class="ident">earliest</span>.<span class="ident">hour</span>(), <span class="number">2</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">earliest</span>.<span class="ident">minute</span>(), <span class="number">30</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">earliest</span>.<span class="ident">local_time_type</span>().<span class="ident">ut_offset</span>(), <span class="number">7200</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">earliest</span>.<span class="ident">local_time_type</span>().<span class="ident">time_zone_designation</span>(), <span class="string">&quot;CEST&quot;</span>);
+
+<span class="kw">let</span> <span class="ident">latest</span> <span class="op">=</span> <span class="ident">found_date_times</span>.<span class="ident">latest</span>().<span class="ident">unwrap</span>();
+<span class="macro">assert_eq!</span>(<span class="ident">latest</span>.<span class="ident">hour</span>(), <span class="number">2</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">latest</span>.<span class="ident">minute</span>(), <span class="number">30</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">latest</span>.<span class="ident">local_time_type</span>().<span class="ident">ut_offset</span>(), <span class="number">3600</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">latest</span>.<span class="ident">local_time_type</span>().<span class="ident">time_zone_designation</span>(), <span class="string">&quot;CET&quot;</span>);</code></pre></div>
+</div></details><h2 id="reexports" class="small-section-header"><a href="#reexports">Re-exports</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left import-item" id="reexport.DateTime"><code>pub use datetime::<a class="struct" href="datetime/struct.DateTime.html" title="struct tz::datetime::DateTime">DateTime</a>;</code></div><div class="item-right docblock-short"></div></div><div class="item-row"><div class="item-left import-item" id="reexport.UtcDateTime"><code>pub use datetime::<a class="struct" href="datetime/struct.UtcDateTime.html" title="struct tz::datetime::UtcDateTime">UtcDateTime</a>;</code></div><div class="item-right docblock-short"></div></div><div class="item-row"><div class="item-left import-item" id="reexport.TzError"><code>pub use error::<a class="enum" href="error/enum.TzError.html" title="enum tz::error::TzError">TzError</a>;</code></div><div class="item-right docblock-short"></div></div><div class="item-row"><div class="item-left import-item" id="reexport.LocalTimeType"><code>pub use timezone::<a class="struct" href="timezone/struct.LocalTimeType.html" title="struct tz::timezone::LocalTimeType">LocalTimeType</a>;</code></div><div class="item-right docblock-short"></div></div><div class="item-row"><div class="item-left import-item" id="reexport.TimeZone"><code>pub use timezone::<a class="struct" href="timezone/struct.TimeZone.html" title="struct tz::timezone::TimeZone">TimeZone</a>;</code></div><div class="item-right docblock-short"></div></div><div class="item-row"><div class="item-left import-item" id="reexport.TimeZoneRef"><code>pub use timezone::<a class="struct" href="timezone/struct.TimeZoneRef.html" title="struct tz::timezone::TimeZoneRef">TimeZoneRef</a>;</code></div><div class="item-right docblock-short"></div></div></div><h2 id="modules" class="small-section-header"><a href="#modules">Modules</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="mod" href="datetime/index.html" title="tz::datetime mod">datetime</a></div><div class="item-right docblock-short"><p>Types related to a date time.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="error/index.html" title="tz::error mod">error</a></div><div class="item-right docblock-short"><p>Error types.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="timezone/index.html" title="tz::timezone mod">timezone</a></div><div class="item-right docblock-short"><p>Types related to a time zone.</p>
+</div></div></div><h2 id="types" class="small-section-header"><a href="#types">Type Definitions</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="type" href="type.Result.html" title="tz::Result type">Result</a></div><div class="item-right docblock-short"><p>Alias for <a href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="std::result::Result"><code>std::result::Result</code></a> with the crate unified error</p>
+</div></div></div></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="tz" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (2f3ddd9f5 2022-06-27)" ></div>
+</body></html>

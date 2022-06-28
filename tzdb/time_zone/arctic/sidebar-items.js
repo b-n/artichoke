@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":[["LONGYEARBYEN","Time zone data for Arctic/Longyearbyen,"]]};

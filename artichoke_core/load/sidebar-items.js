@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":[["Loaded","The side effect from a call to `Kernel#load`."],["Required","The side effect from a call to `Kernel#require`."]],"trait":[["LoadSources","Load Ruby sources and Rust extensions into an interpreter."]]};

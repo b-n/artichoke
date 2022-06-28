@@ -1,0 +1,54 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Routines for debug escaping Ruby Strings."><meta name="keywords" content="rust, rustlang, rust-lang, scolapasta_string_escape"><title>scolapasta_string_escape - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../dark.css" disabled><link rel="stylesheet" type="text/css" href="../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../storage.js"></script><script defer src="../crates.js"></script><script defer src="../main.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../favicon.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../scolapasta_string_escape/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"></h2>
+    </nav>
+    <nav class="sidebar"><a class="sidebar-logo" href="../scolapasta_string_escape/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"><a href="#">Crate scolapasta_string_escape</a></h2><div class="sidebar-elems"><div class="block"><ul><li class="version">Version 0.3.0</li><li><a id="all-types" href="all.html">All Items</a></li></ul></div><section><div class="block"><ul><li><a href="#structs">Structs</a></li><li><a href="#functions">Functions</a></li></ul></div></section></div></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../scolapasta_string_escape/index.html"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
+                                <a href="../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../wheel.svg"></a></div>
+                        </div></form></nav></div><section id="main-content" class="content"><div class="main-heading">
+    <h1 class="fqn"><span class="in-band">Crate <a class="mod" href="#">scolapasta_string_escape</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span></h1><span class="out-of-band"><a class="srclink" href="../src/scolapasta_string_escape/lib.rs.html#1-104">source</a> · <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Routines for debug escaping Ruby Strings.</p>
+<p>Ruby Strings are conventionally UTF-8 byte sequences. When calling
+<a href="https://ruby-doc.org/core-2.6.3/String.html#method-i-inspect"><code>String#inspect</code></a> or <a href="https://ruby-doc.org/core-2.6.3/Symbol.html#method-i-inspect"><code>Symbol#inspect</code></a>, these maybe UTF-8 byte strings are
+escaped to have a valid and printable UTF-8 representation.</p>
+<p>This crate exposes functions and iterators for encoding arbitrary byte
+slices as valid, printable UTF-8.</p>
+<h2 id="ruby-debug-escapes"><a href="#ruby-debug-escapes">Ruby debug escapes</a></h2>
+<p>Ruby produces debug escapes that look like:</p>
+<div class="example-wrap"><pre class="language-console"><code>[2.6.3] &gt; &quot;Artichoke Ruby is made with Rust.
+
+Invalid UTF-8: \xFF.
+
+Slash \\ and quote \&quot; are escaped.&quot;
+=&gt; &quot;Artichoke Ruby is made with Rust.\n\nInvalid UTF-8: \xFF.\n\nSlash \\ and quote \&quot; are escaped.&quot;</code></pre></div>
+<p>Ruby escape sequences differ than Rust escape sequences for some characters.
+For example <code>0x0C</code>:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="comment">// Rust</span>
+<span class="macro">assert_eq!</span>(<span class="string">&#39;\x0C&#39;</span>.<span class="ident">escape_debug</span>().<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>(), <span class="string">r&quot;\u{c}&quot;</span>);
+<span class="comment">// Ruby</span>
+<span class="macro">assert_eq!</span>(<span class="ident">Literal::from</span>(<span class="number">0x0C</span>).<span class="ident">as_str</span>(), <span class="string">r&quot;\f&quot;</span>);</code></pre></div>
+<h2 id="examples"><a href="#examples">Examples</a></h2>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">const</span> <span class="ident">EXAMPLE</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="string">b&quot;Artichoke Ruby is made with Rust.
+
+Invalid UTF-8: \xFF.
+
+Slash \\ and quote \&quot; are escaped.&quot;</span>;
+
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">escaped</span> <span class="op">=</span> <span class="ident">String::new</span>();
+<span class="ident">format_debug_escape_into</span>(<span class="kw-2">&amp;mut</span> <span class="ident">escaped</span>, <span class="ident">EXAMPLE</span>)<span class="question-mark">?</span>;
+<span class="macro">assert_eq!</span>(
+    <span class="ident">escaped</span>,
+    <span class="string">r#&quot;Artichoke Ruby is made with Rust.\n\nInvalid UTF-8: \xFF.\n\nSlash \\ and quote \&quot; are escaped.&quot;#</span>,
+);</code></pre></div>
+<h2 id="no_std"><a href="#no_std"><code>no_std</code></a></h2>
+<p>This crate is <code>no_std</code> compatible. This crate does not depend on <a href="https://doc.rust-lang.org/alloc/"><code>alloc</code></a>.</p>
+</div></details><h2 id="structs" class="small-section-header"><a href="#structs">Structs</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.ByteSequenceTooLongError.html" title="scolapasta_string_escape::ByteSequenceTooLongError struct">ByteSequenceTooLongError</a></div><div class="item-right docblock-short"><p>Error that indicates a <a href="struct.InvalidUtf8ByteSequence.html" title="InvalidUtf8ByteSequence"><code>InvalidUtf8ByteSequence</code></a> could not be constructed
+because the byte sequence contained more than three bytes.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.InvalidUtf8ByteSequence.html" title="scolapasta_string_escape::InvalidUtf8ByteSequence struct">InvalidUtf8ByteSequence</a></div><div class="item-right docblock-short"><p>Iterator of Ruby debug escape sequences for a contiguous invalid UTF-8 byte
+sequence.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Literal.html" title="scolapasta_string_escape::Literal struct">Literal</a></div><div class="item-right docblock-short"><p>Iterator of Ruby debug escape sequences for a byte.</p>
+</div></div></div><h2 id="functions" class="small-section-header"><a href="#functions">Functions</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.ascii_char_with_escape.html" title="scolapasta_string_escape::ascii_char_with_escape fn">ascii_char_with_escape</a></div><div class="item-right docblock-short"><p>Returns whether the given <a href="https://doc.rust-lang.org/nightly/std/primitive.char.html" title="char"><code>char</code></a> has an ASCII literal escape code.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.format_debug_escape_into.html" title="scolapasta_string_escape::format_debug_escape_into fn">format_debug_escape_into</a></div><div class="item-right docblock-short"><p>Write a UTF-8 debug representation of a byte slice into the given writer.</p>
+</div></div></div></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="scolapasta_string_escape" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (2f3ddd9f5 2022-06-27)" ></div>
+</body></html>

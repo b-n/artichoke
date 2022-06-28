@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"trait":[["File","Rust extension hook that can be required."]]};

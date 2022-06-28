@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":[["ArenaIndex","Interpreter guard that acts as a GC arena savepoint."],["ArenaSavepointError","Failed to create a new GC arena savepoint."]]};

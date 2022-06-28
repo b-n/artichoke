@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":[["is_explicit_relative","Return whether the given path starts with an explicit relative path."],["is_explicit_relative_bytes","Return whether the given byte string to treat as a path starts with an explicit relative path."],["memory_loader_ruby_load_path","Directory at which Ruby sources and extensions are stored in the virtual file system."]]};

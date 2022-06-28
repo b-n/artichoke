@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":[["ACRE","Time zone data for Brazil/Acre,"],["DE_NORONHA","Time zone data for Brazil/DeNoronha,"],["EAST","Time zone data for Brazil/East,"],["WEST","Time zone data for Brazil/West,"]]};

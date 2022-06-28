@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"trait":[["ClassRegistry","Define and store class specs on an interpreter."]]};

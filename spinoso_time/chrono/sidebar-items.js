@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":[["ComponentOutOfRangeError","Error returned when constructing a `Time` from a `ToA`."],["Offset","Timestamp offsets from UTC."]],"struct":[["Time","Implementation of Ruby `Time`, a timezone-aware datetime, based on [`chrono`]."],["ToA","Serialized representation of a timestamp using a ten-element array of datetime components."]]};

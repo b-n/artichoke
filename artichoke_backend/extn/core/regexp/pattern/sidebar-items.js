@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":[["parse",""]],"struct":[["Pattern","A Regexp pattern including its derived `Options`."]]};

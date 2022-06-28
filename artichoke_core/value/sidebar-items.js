@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"trait":[["Value","A boxed Ruby value owned by the interpreter."]]};

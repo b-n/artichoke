@@ -1,0 +1,75 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Unicode case folding methods for case-insensitive string comparisons."><meta name="keywords" content="rust, rustlang, rust-lang, focaccia"><title>focaccia - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../dark.css" disabled><link rel="stylesheet" type="text/css" href="../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../storage.js"></script><script defer src="../crates.js"></script><script defer src="../main.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../favicon.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../focaccia/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"></h2>
+    </nav>
+    <nav class="sidebar"><a class="sidebar-logo" href="../focaccia/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"><a href="#">Crate focaccia</a></h2><div class="sidebar-elems"><div class="block"><ul><li class="version">Version 1.1.2</li><li><a id="all-types" href="all.html">All Items</a></li></ul></div><section><div class="block"><ul><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#functions">Functions</a></li></ul></div></section></div></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../focaccia/index.html"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
+                                <a href="../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../wheel.svg"></a></div>
+                        </div></form></nav></div><section id="main-content" class="content"><div class="main-heading">
+    <h1 class="fqn"><span class="in-band">Crate <a class="mod" href="#">focaccia</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span></h1><span class="out-of-band"><a class="srclink" href="../src/focaccia/lib.rs.html#1-508">source</a> · <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Unicode case folding methods for case-insensitive string comparisons.</p>
+<p>Focaccia supports full, ASCII, and Turkic <a href="https://www.w3.org/International/wiki/Case_folding">Unicode case folding</a> equality
+and <a href="https://doc.rust-lang.org/nightly/core/cmp/enum.Ordering.html"><code>Ordering</code></a> comparisons.</p>
+<p>The primary entry point to Focaccia is the <a href="enum.CaseFold.html" title="CaseFold"><code>CaseFold</code></a> enum. Focaccia also
+provides free functions for each case folding scheme.</p>
+<h2 id="examples"><a href="#examples">Examples</a></h2>
+<p>For Unicode text, Focaccia recommends the <a href="enum.CaseFold.html#variant.Full"><code>Full</code></a> folding
+scheme. To make a comparison:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="ident">fold</span> <span class="op">=</span> <span class="ident">CaseFold::Full</span>;
+<span class="macro">assert_eq!</span>(<span class="ident">fold</span>.<span class="ident">casecmp</span>(<span class="string">&quot;MASSE&quot;</span>, <span class="string">&quot;Maße&quot;</span>), <span class="ident">Ordering::Equal</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">fold</span>.<span class="ident">casecmp</span>(<span class="string">&quot;São Paulo&quot;</span>, <span class="string">&quot;Sao Paulo&quot;</span>), <span class="ident">Ordering::Greater</span>);
+
+<span class="macro">assert!</span>(<span class="ident">fold</span>.<span class="ident">case_eq</span>(<span class="string">&quot;MASSE&quot;</span>, <span class="string">&quot;Maße&quot;</span>));
+<span class="macro">assert!</span>(<span class="op">!</span><span class="ident">fold</span>.<span class="ident">case_eq</span>(<span class="string">&quot;São Paulo&quot;</span>, <span class="string">&quot;Sao Paulo&quot;</span>));</code></pre></div>
+<p>For text known to be ASCII, Focaccia can make a more performant comparison
+check:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="ident">fold</span> <span class="op">=</span> <span class="ident">CaseFold::Ascii</span>;
+<span class="macro">assert_eq!</span>(<span class="ident">fold</span>.<span class="ident">casecmp</span>(<span class="string">&quot;Crate: focaccia&quot;</span>, <span class="string">&quot;Crate: FOCACCIA&quot;</span>), <span class="ident">Ordering::Equal</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">fold</span>.<span class="ident">casecmp</span>(<span class="string">&quot;Fabled&quot;</span>, <span class="string">&quot;failed&quot;</span>), <span class="ident">Ordering::Less</span>);
+
+<span class="macro">assert!</span>(<span class="ident">fold</span>.<span class="ident">case_eq</span>(<span class="string">&quot;Crate: focaccia&quot;</span>, <span class="string">&quot;Crate: FOCACCIA&quot;</span>));
+<span class="macro">assert!</span>(<span class="op">!</span><span class="ident">fold</span>.<span class="ident">case_eq</span>(<span class="string">&quot;Fabled&quot;</span>, <span class="string">&quot;failed&quot;</span>));</code></pre></div>
+<p>ASCII case comparison can be checked on a byte slice:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">assert_eq!</span>(<span class="ident">ascii_casecmp</span>(<span class="string">b&quot;Artichoke Ruby&quot;</span>, <span class="string">b&quot;artichoke ruby&quot;</span>), <span class="ident">Ordering::Equal</span>);
+<span class="macro">assert!</span>(<span class="ident">ascii_case_eq</span>(<span class="string">b&quot;Artichoke Ruby&quot;</span>, <span class="string">b&quot;artichoke ruby&quot;</span>));</code></pre></div>
+<p>Turkic case folding is similar to full case folding with additional mappings
+for <a href="https://en.wikipedia.org/wiki/Dotted_and_dotless_I">dotted and dotless I</a>:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="ident">fold</span> <span class="op">=</span> <span class="ident">CaseFold::Turkic</span>;
+<span class="macro">assert_eq!</span>(<span class="ident">fold</span>.<span class="ident">casecmp</span>(<span class="string">&quot;İstanbul&quot;</span>, <span class="string">&quot;istanbul&quot;</span>), <span class="ident">Ordering::Equal</span>);
+<span class="macro">assert_ne!</span>(<span class="ident">fold</span>.<span class="ident">casecmp</span>(<span class="string">&quot;İstanbul&quot;</span>, <span class="string">&quot;Istanbul&quot;</span>), <span class="ident">Ordering::Equal</span>);
+
+<span class="macro">assert!</span>(<span class="ident">fold</span>.<span class="ident">case_eq</span>(<span class="string">&quot;İstanbul&quot;</span>, <span class="string">&quot;istanbul&quot;</span>));
+<span class="macro">assert!</span>(<span class="op">!</span><span class="ident">fold</span>.<span class="ident">case_eq</span>(<span class="string">&quot;İstanbul&quot;</span>, <span class="string">&quot;Istanbul&quot;</span>));</code></pre></div>
+<h2 id="no_std"><a href="#no_std"><code>no_std</code></a></h2>
+<p>Focaccia is <code>no_std</code> compatible. By default, Focaccia builds with its
+<strong>std</strong> feature enabled to implement <a href="https://doc.rust-lang.org/stable/std/error/trait.Error.html"><code>Error</code></a>.</p>
+<p>When built without the <strong>std</strong> feature, Focaccia does not link to <code>alloc</code>.</p>
+<h2 id="crate-features"><a href="#crate-features">Crate features</a></h2>
+<p>All features are enabled by default.</p>
+<ul>
+<li><strong>std</strong> - Enable linking to the <a href="https://doc.rust-lang.org/stable/std/index.html">Rust Standard Library</a>. Enabling this
+feature adds <a href="https://doc.rust-lang.org/stable/std/error/trait.Error.html"><code>Error</code></a> implementations to error types in this crate.</li>
+</ul>
+<h2 id="unicode-version"><a href="#unicode-version">Unicode Version</a></h2>
+<p>Focaccia implements Unicode case folding with the Unicode 14.0.0 case folding
+ruleset.</p>
+<p>Each new release of Unicode may bring updates to the <code>CaseFolding.txt</code> which is
+the source for the folding mappings in this crate. Updates to the case folding
+rules will be accompanied with a minor version bump.</p>
+</div></details><h2 id="structs" class="small-section-header"><a href="#structs">Structs</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.NoSuchCaseFoldingScheme.html" title="focaccia::NoSuchCaseFoldingScheme struct">NoSuchCaseFoldingScheme</a></div><div class="item-right docblock-short"><p>Error type for returned when a folding scheme could not be resolved in a
+<a href="https://doc.rust-lang.org/nightly/core/convert/trait.TryFrom.html" title="TryFrom"><code>TryFrom</code></a> implementation.</p>
+</div></div></div><h2 id="enums" class="small-section-header"><a href="#enums">Enums</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.CaseFold.html" title="focaccia::CaseFold enum">CaseFold</a></div><div class="item-right docblock-short"><p>Unicode case folding strategies.</p>
+</div></div></div><h2 id="functions" class="small-section-header"><a href="#functions">Functions</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.ascii_case_eq.html" title="focaccia::ascii_case_eq fn">ascii_case_eq</a></div><div class="item-right docblock-short"><p>Check two bytestrings for equality with ASCII case folding.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.ascii_casecmp.html" title="focaccia::ascii_casecmp fn">ascii_casecmp</a></div><div class="item-right docblock-short"><p>Compare two bytestrings with ASCII case folding.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.unicode_full_case_eq.html" title="focaccia::unicode_full_case_eq fn">unicode_full_case_eq</a></div><div class="item-right docblock-short"><p>Check two strings for equality with Full Unicode case folding.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.unicode_full_casecmp.html" title="focaccia::unicode_full_casecmp fn">unicode_full_casecmp</a></div><div class="item-right docblock-short"><p>Compare two strings with Full Unicode case folding.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.unicode_full_turkic_case_eq.html" title="focaccia::unicode_full_turkic_case_eq fn">unicode_full_turkic_case_eq</a></div><div class="item-right docblock-short"><p>Check two strings for equality with Full Unicode case folding for Turkic
+languages.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.unicode_full_turkic_casecmp.html" title="focaccia::unicode_full_turkic_casecmp fn">unicode_full_turkic_casecmp</a></div><div class="item-right docblock-short"><p>Compare two strings with Full Unicode case folding for Turkic languages.</p>
+</div></div></div></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="focaccia" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (2f3ddd9f5 2022-06-27)" ></div>
+</body></html>

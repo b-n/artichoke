@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":[["BAJA_NORTE","Time zone data for Mexico/BajaNorte,"],["BAJA_SUR","Time zone data for Mexico/BajaSur,"],["GENERAL","Time zone data for Mexico/General,"]]};

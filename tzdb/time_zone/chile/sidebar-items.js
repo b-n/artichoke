@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":[["CONTINENTAL","Time zone data for Chile/Continental,"],["EASTER_ISLAND","Time zone data for Chile/EasterIsland,"]]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":[["IncrementLinenoError","Errors encountered when incrementing line numbers on parser state."]],"trait":[["Parser","Manage parser state, active filename context, and line number metadata."]]};

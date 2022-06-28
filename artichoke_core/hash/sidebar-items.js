@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"trait":[["Hash","A trait for retrieving an interpreter-global [`BuildHasher`]."]]};

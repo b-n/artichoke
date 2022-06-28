@@ -1,0 +1,83 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Contiguous growable vector types that implement the Ruby `Array` API."><meta name="keywords" content="rust, rustlang, rust-lang, spinoso_array"><title>spinoso_array - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../dark.css" disabled><link rel="stylesheet" type="text/css" href="../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../storage.js"></script><script defer src="../crates.js"></script><script defer src="../main.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../favicon.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../spinoso_array/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"></h2>
+    </nav>
+    <nav class="sidebar"><a class="sidebar-logo" href="../spinoso_array/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"><a href="#">Crate spinoso_array</a></h2><div class="sidebar-elems"><div class="block"><ul><li class="version">Version 0.9.0</li><li><a id="all-types" href="all.html">All Items</a></li></ul></div><section><div class="block"><ul><li><a href="#structs">Structs</a></li><li><a href="#constants">Constants</a></li></ul></div></section></div></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../spinoso_array/index.html"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
+                                <a href="../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../wheel.svg"></a></div>
+                        </div></form></nav></div><section id="main-content" class="content"><div class="main-heading">
+    <h1 class="fqn"><span class="in-band">Crate <a class="mod" href="#">spinoso_array</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span></h1><span class="out-of-band"><a class="srclink" href="../src/spinoso_array/lib.rs.html#1-154">source</a> · <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Contiguous growable vector types that implement the <a href="https://ruby-doc.org/core-2.6.3/Array.html">Ruby <code>Array</code></a> API.</p>
+<p><code>Array</code> types are growable vectors with potentially heap-allocated contents.
+The types in this crate can be passed by pointer over FFI.</p>
+<p><code>Array</code> types implement the mutating APIs in the Ruby <code>Array</code> core class as
+well as indexing and slicing APIs.</p>
+<p><code>spinoso-array</code> is part of a <a href="https://crates.io/keywords/spinoso">collection of crates</a> that implement the data
+structures that comprise the Ruby Core and Standard Library implementation
+for <a href="https://www.artichokeruby.org/">Artichoke Ruby</a>.</p>
+<h2 id="array-types"><a href="#array-types">Array types</a></h2>
+<ul>
+<li><a href="struct.Array.html" title="Array"><code>Array</code></a> is based on <a href="https://doc.rust-lang.org/nightly/alloc/vec/struct.Vec.html"><code>Vec</code></a> from the Rust <code>alloc</code> crate and standard
+library. This Spinoso array type is enabled by default.</li>
+<li><a href="struct.SmallArray.html" title="SmallArray"><code>SmallArray</code></a> is based on <a href="../smallvec/struct.SmallVec.html"><code>SmallVec</code></a> and implements the small vector
+optimization – small arrays are stored inline without a heap allocation.
+This Spinoso array type requires the <strong>small-array</strong> Cargo feature.</li>
+<li><a href="struct.TinyArray.html" title="TinyArray"><code>TinyArray</code></a> is based on <a href="../tinyvec/tinyvec/enum.TinyVec.html"><code>TinyVec</code></a> and implements the small vector
+optimization – small arrays are stored inline without a heap allocation.
+This Spinoso array type requires the <strong>tiny-array</strong> Cargo feature.</li>
+</ul>
+<h2 id="no_std"><a href="#no_std"><code>no_std</code></a></h2>
+<p>This crate is <code>no_std</code> with a required dependency on the <a href="https://doc.rust-lang.org/nightly/alloc/index.html" title="alloc"><code>alloc</code></a> crate.</p>
+<h2 id="examples"><a href="#examples">Examples</a></h2>
+<p>You can create an <a href="struct.Array.html"><code>Array&lt;T&gt;</code></a> with <a href="struct.Array.html#method.new"><code>new</code></a>:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="ident">ary</span>: <span class="ident">Array</span><span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Array::new</span>();</code></pre></div>
+<p>Or with one of the many <a href="https://doc.rust-lang.org/nightly/core/convert/trait.From.html"><code>From</code></a> and <a href="https://doc.rust-lang.org/nightly/core/iter/traits/collect/trait.FromIterator.html"><code>FromIterator</code></a> implementations:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="ident">ary</span>: <span class="ident">Array</span><span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Array::from</span>(<span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>]);
+<span class="kw">let</span> <span class="ident">ary2</span>: <span class="ident">Array</span><span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">iter::repeat</span>(<span class="number">1</span>).<span class="ident">take</span>(<span class="number">10</span>).<span class="ident">collect</span>();</code></pre></div>
+<p>You can <a href="struct.Array.html#method.push"><code>push</code></a> values onto the end of an array (which will
+grow the array as needed):</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ary</span> <span class="op">=</span> <span class="ident">Array::from</span>(<span class="kw-2">&amp;</span>[<span class="number">1</span>, <span class="number">2</span>]);
+<span class="ident">ary</span>.<span class="ident">push</span>(<span class="number">3</span>);</code></pre></div>
+<p>Popping values behaves similarly:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ary</span> <span class="op">=</span> <span class="ident">Array::from</span>(<span class="kw-2">&amp;</span>[<span class="number">1</span>, <span class="number">2</span>]);
+<span class="macro">assert_eq!</span>(<span class="ident">ary</span>.<span class="ident">pop</span>(), <span class="prelude-val">Some</span>(<span class="number">2</span>));</code></pre></div>
+<p>Arrays also support indexing (through the <a href="https://doc.rust-lang.org/nightly/core/ops/index/trait.Index.html"><code>Index</code></a> and <a href="https://doc.rust-lang.org/nightly/core/ops/index/trait.IndexMut.html"><code>IndexMut</code></a>
+traits):</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">Array::from</span>(<span class="kw-2">&amp;</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]);
+<span class="kw">let</span> <span class="ident">three</span> <span class="op">=</span> <span class="ident">a</span>[<span class="number">2</span>];
+<span class="ident">a</span>[<span class="number">1</span>] <span class="op">=</span> <span class="ident">a</span>[<span class="number">1</span>] <span class="op">+</span> <span class="number">5</span>;</code></pre></div>
+<p>The <code>Array</code> vector types in this crate differ from <a href="https://doc.rust-lang.org/nightly/alloc/vec/struct.Vec.html"><code>Vec</code></a> in the Rust <code>std</code>
+by offering many specialized slicing and mutation APIs. For example, rather
+than offering APIs like <a href="https://doc.rust-lang.org/nightly/alloc/vec/struct.Vec.html#method.drain"><code>Vec::drain</code></a> and <a href="https://doc.rust-lang.org/nightly/alloc/vec/struct.Vec.html#method.splice"><code>Vec::splice</code></a>, array types in
+this crate offer specialized methods like <a href="struct.Array.html#method.shift"><code>shift</code></a>, <a href="struct.Array.html#method.shift_n"><code>shift_n</code></a>,
+<a href="struct.Array.html#method.unshift"><code>unshift</code></a>, and <a href="struct.Array.html#method.unshift_n"><code>unshift_n</code></a> and <code>splice</code>-like methods with
+<a href="struct.Array.html#method.insert_slice"><code>insert_slice</code></a>, and <a href="struct.Array.html#method.set_slice"><code>set_slice</code></a>.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">Array::from</span>(<span class="kw-2">&amp;</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]);
+<span class="ident">a</span>.<span class="ident">unshift</span>(<span class="number">0</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">a</span>, [<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]);
+<span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">a</span>.<span class="ident">shift_n</span>(<span class="number">10</span>);
+<span class="macro">assert_eq!</span>(<span class="ident">a</span>, []);
+<span class="macro">assert_eq!</span>(<span class="ident">b</span>, [<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]);</code></pre></div>
+<h2 id="panics"><a href="#panics">Panics</a></h2>
+<p><code>Array</code>s in this crate do not expose panicking slicing operations (except for
+their <a href="https://doc.rust-lang.org/nightly/core/ops/index/trait.Index.html"><code>Index</code></a> and <a href="https://doc.rust-lang.org/nightly/core/ops/index/trait.IndexMut.html"><code>IndexMut</code></a> implementations). Instead of panicking,
+slicing APIs operate until the end of the vector or return <code>&amp;[]</code>. Mutating
+APIs extend <code>Array</code>s on out of bounds access.</p>
+</div></details><h2 id="structs" class="small-section-header"><a href="#structs">Structs</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Array.html" title="spinoso_array::Array struct">Array</a></div><div class="item-right docblock-short"><p>A contiguous growable array type based on <a href="https://doc.rust-lang.org/nightly/alloc/vec/struct.Vec.html"><code>Vec&lt;T&gt;</code></a>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.RawParts.html" title="spinoso_array::RawParts struct">RawParts</a></div><div class="item-right docblock-short"><p>A wrapper around the decomposed parts of a <code>Vec&lt;T&gt;</code>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.SmallArray.html" title="spinoso_array::SmallArray struct">SmallArray</a><span class="stab portability" title="Available on crate feature `small-array` only"><code>small-array</code></span></div><div class="item-right docblock-short"><p>A contiguous growable array type based on
+<a href="../smallvec/struct.SmallVec.html"><code>SmallVec&lt;[T; INLINE_CAPACITY]&gt;</code></a> that implements the small vector
+optimization.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.TinyArray.html" title="spinoso_array::TinyArray struct">TinyArray</a><span class="stab portability" title="Available on crate feature `tiny-array` only"><code>tiny-array</code></span></div><div class="item-right docblock-short"><p>A contiguous growable array type based on
+<a href="../tinyvec/tinyvec/enum.TinyVec.html"><code>TinyVec&lt;[T; INLINE_CAPACITY]&gt;</code></a> that implements the small vector
+optimization.</p>
+</div></div></div><h2 id="constants" class="small-section-header"><a href="#constants">Constants</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="constant" href="constant.INLINE_CAPACITY.html" title="spinoso_array::INLINE_CAPACITY constant">INLINE_CAPACITY</a><span class="stab portability" title="Available on crate features `small-array` or `tiny-array` only"><code>small-array</code> or <code>tiny-array</code></span></div><div class="item-right docblock-short"><p>Vectors that implement the small vector optimization can store 8 elements
+inline without a heap allocation.</p>
+</div></div></div></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="spinoso_array" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (2f3ddd9f5 2022-06-27)" ></div>
+</body></html>

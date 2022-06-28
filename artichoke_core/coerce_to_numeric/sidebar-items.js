@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"trait":[["CoerceToNumeric","Coerce Ruby values to native numerics (floats and integers)."]]};

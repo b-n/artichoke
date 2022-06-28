@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":[["TOP_FILENAME","Filename of the top eval context."]],"struct":[["Context","`Context` is used to manipulate the current filename on the parser."],["State",""]]};

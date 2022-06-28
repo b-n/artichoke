@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":[["begin",""],["captures",""],["element_reference",""],["end",""],["length",""],["named_captures",""],["names",""],["offset",""],["post_match",""],["pre_match",""],["regexp",""],["string",""],["to_a",""],["to_s",""]]};

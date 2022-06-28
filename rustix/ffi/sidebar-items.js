@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"type":[["FromBytesWithNulError","See [core::ffi::FromBytesWithNulError]."],["NulError","See [alloc::ffi::NulError]."],["ZStr","See [core::ffi::CStr]."],["ZString","See [alloc::ffi::CString]."]]};

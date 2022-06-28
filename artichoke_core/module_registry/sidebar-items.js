@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"trait":[["ModuleRegistry","Define and store module specs on an interpreter."]]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":[["mruby","FFI glue between the Rust trampolines and the mruby C interpreter."],["trampoline","Glue between mruby FFI and `Time` Rust implementation."]],"struct":[["Time","Implementation of Ruby `Time`, a timezone-aware datetime, based on [`chrono`]."]]};

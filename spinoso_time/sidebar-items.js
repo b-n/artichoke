@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":[["MICROS_IN_NANO","Number of microseconds in one nanosecond."],["NANOS_IN_SECOND","Number of nanoseconds in one second."]],"mod":[["chrono","A Time struct backed by the `chrono` rust crate"],["tzrs","A Time struct backed by the `tz-rs` rust crate"]]};

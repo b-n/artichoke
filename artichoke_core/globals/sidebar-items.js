@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"trait":[["Globals","Get and set global variables on an interpreter."]]};

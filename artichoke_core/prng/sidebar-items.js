@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"trait":[["Prng","Interpreter global pseudorandom number generator (PRNG)."]]};

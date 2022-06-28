@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":[["initialize",""],["join",""],["repeat",""]],"mod":[["args",""],["mruby",""],["trampoline",""]],"struct":[["Array","A contiguous growable array type based on `Vec<sys::mrb_value>` that implements the Ruby `Array` API for `artichoke-backend` and `mruby`."],["RawParts","A wrapper around the decomposed parts of a `Vec<T>`."]]};

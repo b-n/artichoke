@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":[["datetime","Types related to a date time."],["error","Error types."],["timezone","Types related to a time zone."]],"type":[["Result","Alias for [`std::result::Result`] with the crate unified error"]]};
