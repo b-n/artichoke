@@ -1,4 +1,3 @@
-use super::Offset;
 use super::Time;
 use crate::MICROS_IN_NANO;
 
@@ -16,7 +15,7 @@ impl Time {
     ///
     /// ```
     /// use spinoso_time::{tzrs::Time, NANOS_IN_SECOND};
-    /// let t = Time::utc(2022, 1, 1, 12, 0, 0, 1);
+    /// let t = Time::utc(2022, 1, 1, 12, 0, 0, 1).unwrap();
     /// let t_float = t.to_float();
     /// let float_nanos = (t_float - t_float.round()) * NANOS_IN_SECOND as f64;
     /// assert_ne!(float_nanos, 1f64);
@@ -33,13 +32,13 @@ impl Time {
 
     /// Returns the number of microseconds for _time_.
     ///
-    /// Can be used to implement [`Time#usec`] and [`Time#tv_usec`]
+    /// Can be used to implement [`Time#usec`] and [`Time#tv_usec`].
     ///
     /// # Examples
     ///
     /// ```
     /// use spinoso_time::{tzrs::Time, MICROS_IN_NANO};
-    /// let t = Time::utc(2022, 1, 1, 12, 0, 0, 1 * MICROS_IN_NANO);
+    /// let t = Time::utc(2022, 1, 1, 12, 0, 0, 1 * MICROS_IN_NANO).unwrap();
     /// assert_eq!(t.microseconds(), 1);
     /// ```
     ///
@@ -62,7 +61,7 @@ impl Time {
     ///
     /// ```
     /// use spinoso_time::tzrs::Time;
-    /// let now = Time::utc(2022, 7, 8, 12, 34, 56, 0);
+    /// let now = Time::utc(2022, 7, 8, 12, 34, 56, 0).unwrap();
     /// let second_of_minute = now.second();
     /// assert_eq!(second_of_minute, 56);
     /// ```
@@ -83,7 +82,7 @@ impl Time {
     ///
     /// ```
     /// use spinoso_time::tzrs::Time;
-    /// let now = Time::utc(2022, 7, 8, 12, 34, 56, 0);
+    /// let now = Time::utc(2022, 7, 8, 12, 34, 56, 0).unwrap();
     /// let minute_of_hour = now.minute();
     /// assert_eq!(minute_of_hour, 34);
     /// ```
@@ -103,7 +102,7 @@ impl Time {
     ///
     /// ```
     /// use spinoso_time::tzrs::Time;
-    /// let now = Time::utc(2022, 7, 8, 12, 34, 56, 0);
+    /// let now = Time::utc(2022, 7, 8, 12, 34, 56, 0).unwrap();
     /// let hour_of_day = now.hour();
     /// assert_eq!(hour_of_day, 12);
     /// ```
@@ -123,7 +122,7 @@ impl Time {
     ///
     /// ```
     /// use spinoso_time::tzrs::Time;
-    /// let now = Time::utc(2022, 7, 8, 12, 34, 56, 0);
+    /// let now = Time::utc(2022, 7, 8, 12, 34, 56, 0).unwrap();
     /// let day_of_month = now.day();
     /// assert_eq!(day_of_month, 8);
     /// ```
@@ -144,7 +143,7 @@ impl Time {
     ///
     /// ```
     /// use spinoso_time::tzrs::Time;
-    /// let now = Time::utc(2022, 7, 8, 12, 34, 56, 0);
+    /// let now = Time::utc(2022, 7, 8, 12, 34, 56, 0).unwrap();
     /// let month_of_year = now.month();
     /// assert_eq!(month_of_year, 7);
     /// ```
@@ -165,7 +164,7 @@ impl Time {
     ///
     /// ```
     /// use spinoso_time::tzrs::Time;
-    /// let now = Time::utc(2022, 7, 8, 12, 34, 56, 0);
+    /// let now = Time::utc(2022, 7, 8, 12, 34, 56, 0).unwrap();
     /// assert_eq!(now.year(), 2022);
     /// ```
     ///
@@ -178,24 +177,31 @@ impl Time {
 
     /// Returns the name of the time zone as a string.
     ///
-    /// Note: UTC is an empty string due to the [`UTC LocaleTimeType`] being
-    /// constructed with None, which is later coerced into an [`empty string`].
+    /// **Note**: For some offset variants, UTC may return an empty string from
+    /// this method due to the [UTC `LocaleTimeType`][tzrs-utc] being constructed
+    /// with [`None`], which is later coerced into an [empty string].
     ///
     /// # Examples
     /// ```
     /// use spinoso_time::tzrs::Time;
-    /// let now_utc = Time::utc(2022, 7, 8, 12, 34, 56, 0);
+    /// let now_utc = Time::utc(2022, 7, 8, 12, 34, 56, 0).unwrap();
     /// assert_eq!("UTC", now_utc.time_zone());
     /// ```
     ///
-    /// [`UTC LocalTimeType`]: https://docs.rs/tz-rs/0.6.9/src/tz/timezone/mod.rs.html#180
-    /// [`empty string`]: https://docs.rs/tz-rs/0.6.9/src/tz/timezone/mod.rs.html#210
+    /// [tzrs-utc]: https://docs.rs/tz-rs/0.6.10/src/tz/timezone/mod.rs.html#180
+    /// [empty string]: https://docs.rs/tz-rs/0.6.10/src/tz/timezone/mod.rs.html#210
     #[inline]
     #[must_use]
     pub fn time_zone(&self) -> &str {
-        match self.offset {
-            Offset::Utc => "UTC",
-            _ => self.inner.local_time_type().time_zone_designation(),
+        // We can usually get the name from wrapped DateTime, however UTC is a
+        // special case which is an empty string, thus the OffsetType is safer.
+        //
+        // Note: The offset cannot be relied upon for the timezone name, as it
+        // may contain many options (e.g. CEST/CET)
+        if self.offset.is_utc() {
+            "UTC"
+        } else {
+            self.inner.local_time_type().time_zone_designation()
         }
     }
 
@@ -206,7 +212,7 @@ impl Time {
     //// # Examples
     /// ```
     /// use spinoso_time::tzrs::Time;
-    /// let now_utc = Time::utc(2022, 7, 8, 12, 34, 56, 0);
+    /// let now_utc = Time::utc(2022, 7, 8, 12, 34, 56, 0).unwrap();
     /// assert!(now_utc.is_utc());
     /// ```
     ///
@@ -215,7 +221,7 @@ impl Time {
     #[inline]
     #[must_use]
     pub fn is_utc(&self) -> bool {
-        Offset::Utc == self.offset
+        self.offset.is_utc()
     }
 
     /// Returns the offset in seconds between the timezone of _time_ and UTC.
@@ -226,7 +232,7 @@ impl Time {
     ///
     /// ```
     /// use spinoso_time::tzrs::Time;
-    /// let now = Time::utc(2022, 7, 8, 12, 34, 56, 0);
+    /// let now = Time::utc(2022, 7, 8, 12, 34, 56, 0).unwrap();
     /// assert_eq!(now.utc_offset(), 0);
     /// ```
     ///
@@ -248,9 +254,9 @@ impl Time {
     /// ```
     /// use spinoso_time::tzrs::{Time, Offset};
     /// use tzdb::time_zone::{europe::AMSTERDAM, pacific::AUCKLAND};
-    /// let now_ams = Time::new(2022, 5, 18, 16, 0, 0, 0, Offset::from(AMSTERDAM));
+    /// let now_ams = Time::new(2022, 5, 18, 16, 0, 0, 0, Offset::from(AMSTERDAM)).unwrap();
     /// assert!(now_ams.is_dst());
-    /// let now_auckland = Time::new(2022, 5, 18, 16, 0, 0, 0, Offset::from(AUCKLAND));
+    /// let now_auckland = Time::new(2022, 5, 18, 16, 0, 0, 0, Offset::from(AUCKLAND)).unwrap();
     /// assert!(!now_auckland.is_dst());
     /// ```
     ///
@@ -271,7 +277,7 @@ impl Time {
     ///
     /// ```
     /// use spinoso_time::tzrs::Time;
-    /// let now = Time::utc(2022, 7, 8, 12, 34, 56, 0);
+    /// let now = Time::utc(2022, 7, 8, 12, 34, 56, 0).unwrap();
     /// assert_eq!(now.day_of_week(), 5);
     /// ```
     ///
@@ -284,14 +290,19 @@ impl Time {
 
     /// Returns `true` if _time_ represents Sunday.
     ///
-    /// Can be used to implement [`Time#sunday?`]
+    /// Can be used to implement [`Time#sunday?`].
     ///
     /// # Examples
     ///
     /// ```
+    /// # use spinoso_time::tzrs::{Time, TimeError};
+    /// # fn example() -> Result<(), TimeError> {
     /// use spinoso_time::tzrs::Time;
-    /// let now = Time::utc(1970, 1, 4, 0, 0, 0, 0);
+    /// let now = Time::utc(1970, 1, 4, 0, 0, 0, 0)?;
     /// assert!(now.is_sunday());
+    /// # Ok(())
+    /// # }
+    /// # example().unwrap()
     /// ```
     ///
     /// [`Time#sunday?`]: https://ruby-doc.org/core-2.6.3/Time.html#method-i-sunday-3F
@@ -303,14 +314,19 @@ impl Time {
 
     /// Returns `true` if _time_ represents Monday.
     ///
-    /// Can be used to implement [`Time#monday?`]
+    /// Can be used to implement [`Time#monday?`].
     ///
     /// # Examples
     ///
     /// ```
+    /// # use spinoso_time::tzrs::{Time, TimeError};
+    /// # fn example() -> Result<(), TimeError> {
     /// use spinoso_time::tzrs::Time;
-    /// let now = Time::utc(1970, 1, 5, 0, 0, 0, 0);
+    /// let now = Time::utc(1970, 1, 5, 0, 0, 0, 0)?;
     /// assert!(now.is_monday());
+    /// # Ok(())
+    /// # }
+    /// # example().unwrap()
     /// ```
     ///
     /// [`Time#monday?`]: https://ruby-doc.org/core-2.6.3/Time.html#method-i-sunday-3F
@@ -322,14 +338,19 @@ impl Time {
 
     /// Returns `true` if _time_ represents Tuesday.
     ///
-    /// Can be used to implement [`Time#tuesday?`]
+    /// Can be used to implement [`Time#tuesday?`].
     ///
     /// # Examples
     ///
     /// ```
+    /// # use spinoso_time::tzrs::{Time, TimeError};
+    /// # fn example() -> Result<(), TimeError> {
     /// use spinoso_time::tzrs::Time;
-    /// let now = Time::utc(1970, 1, 6, 0, 0, 0, 0);
+    /// let now = Time::utc(1970, 1, 6, 0, 0, 0, 0)?;
     /// assert!(now.is_tuesday());
+    /// # Ok(())
+    /// # }
+    /// # example().unwrap()
     /// ```
     ///
     /// [`Time#tuesday?`]: https://ruby-doc.org/core-2.6.3/Time.html#method-i-sunday-3F
@@ -341,14 +362,19 @@ impl Time {
 
     /// Returns `true` if _time_ represents Wednesday.
     ///
-    /// Can be used to implement [`Time#wednesday?`]
+    /// Can be used to implement [`Time#wednesday?`].
     ///
     /// # Examples
     ///
     /// ```
+    /// # use spinoso_time::tzrs::{Time, TimeError};
+    /// # fn example() -> Result<(), TimeError> {
     /// use spinoso_time::tzrs::Time;
-    /// let now = Time::utc(1970, 1, 7, 0, 0, 0, 0);
+    /// let now = Time::utc(1970, 1, 7, 0, 0, 0, 0)?;
     /// assert!(now.is_wednesday());
+    /// # Ok(())
+    /// # }
+    /// # example().unwrap()
     /// ```
     ///
     /// [`Time#wednesday?`]: https://ruby-doc.org/core-2.6.3/Time.html#method-i-wednesday-3F
@@ -360,14 +386,19 @@ impl Time {
 
     /// Returns `true` if _time_ represents Thursday.
     ///
-    /// Can be used to implement [`Time#thursday?`]
+    /// Can be used to implement [`Time#thursday?`].
     ///
     /// # Examples
     ///
     /// ```
+    /// # use spinoso_time::tzrs::{Time, TimeError};
+    /// # fn example() -> Result<(), TimeError> {
     /// use spinoso_time::tzrs::Time;
-    /// let now = Time::utc(1970, 1, 1, 0, 0, 0, 0);
+    /// let now = Time::utc(1970, 1, 1, 0, 0, 0, 0)?;
     /// assert!(now.is_thursday());
+    /// # Ok(())
+    /// # }
+    /// # example().unwrap()
     /// ```
     ///
     /// [`Time#thursday?`]: https://ruby-doc.org/core-2.6.3/Time.html#method-i-thursday-3F
@@ -379,14 +410,18 @@ impl Time {
 
     /// Returns `true` if _time_ represents Friday.
     ///
-    /// Can be used to implement [`Time#friday?`]
+    /// Can be used to implement [`Time#friday?`].
     ///
     /// # Examples
     ///
     /// ```
-    /// use spinoso_time::tzrs::Time;
-    /// let now = Time::utc(1970, 1, 2, 0, 0, 0, 0);
+    /// # use spinoso_time::tzrs::{Time, TimeError};
+    /// # fn example() -> Result<(), TimeError> {
+    /// let now = Time::utc(1970, 1, 2, 0, 0, 0, 0)?;
     /// assert!(now.is_friday());
+    /// # Ok(())
+    /// # }
+    /// # example().unwrap()
     /// ```
     ///
     /// [`Time#friday?`]: https://ruby-doc.org/core-2.6.3/Time.html#method-i-friday-3F
@@ -398,14 +433,19 @@ impl Time {
 
     /// Returns `true` if _time_ represents Saturday.
     ///
-    /// Can be used to implement [`Time#saturday?`]
+    /// Can be used to implement [`Time#saturday?`].
     ///
     /// # Examples
     ///
     /// ```
+    /// # use spinoso_time::tzrs::{Time, TimeError};
+    /// # fn example() -> Result<(), TimeError> {
     /// use spinoso_time::tzrs::Time;
-    /// let now = Time::utc(1970, 1, 3, 0, 0, 0, 0);
+    /// let now = Time::utc(1970, 1, 3, 0, 0, 0, 0)?;
     /// assert!(now.is_saturday());
+    /// # Ok(())
+    /// # }
+    /// # example().unwrap()
     /// ```
     ///
     /// [`Time#saturday?`]: https://ruby-doc.org/core-2.6.3/Time.html#method-i-saturday-3F
@@ -423,7 +463,7 @@ impl Time {
     ///
     /// ```
     /// use spinoso_time::tzrs::Time;
-    /// let now = Time::utc(2022, 7, 8, 12, 34, 56, 0);
+    /// let now = Time::utc(2022, 7, 8, 12, 34, 56, 0).unwrap();
     /// assert_eq!(now.day_of_year(), 188);
     /// ```
     ///
@@ -441,7 +481,7 @@ mod tests {
 
     #[test]
     fn all_parts() {
-        let dt = Time::utc(2022, 7, 8, 12, 34, 56, 1910);
+        let dt = Time::utc(2022, 7, 8, 12, 34, 56, 1910).unwrap();
         assert_eq!(2022, dt.year());
         assert_eq!(7, dt.month());
         assert_eq!(8, dt.day());

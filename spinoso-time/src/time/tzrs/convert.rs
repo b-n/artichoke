@@ -3,21 +3,23 @@ use core::fmt::{Display, Formatter, Result};
 use super::{Time, ToA};
 
 impl Display for Time {
-    /// Returns a conanocial string representation of _time_
+    /// Returns a conanocial string representation of _time_.
     ///
-    /// Can be used to implement [`Time#asctime`], [`#Time#ctime`],
-    /// [`Time#to_s`] and [`Time#inspect`]
+    /// Can be used to implement the Ruby method [`Time#asctime`],
+    /// [`Time#ctime`], [`Time#to_s`], and [`Time#inspect`].
     ///
     /// # Examples
     ///
     /// ```
     /// use spinoso_time::tzrs::Time;
-    /// let now = Time::utc(2022, 05, 26, 13, 16, 22, 0);
+    /// let now = Time::utc(2022, 05, 26, 13, 16, 22, 0).unwrap();
     /// assert_eq!(now.to_string(), "2022-05-26 13:16:22 UTC");
     /// ```
     ///
     /// [`Time#asctime`]: https://ruby-doc.org/core-2.6.3/Time.html#method-i-asctime
     /// [`Time#ctime`]: https://ruby-doc.org/core-2.6.3/Time.html#method-i-ctime
+    /// [`Time#to_s`]: https://ruby-doc.org/core-2.6.3/Time.html#method-i-to_s
+    /// [`Time#inspect`]: https://ruby-doc.org/core-2.6.3/Time.html#method-i-inspect
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         // TODO: future
         //self.strftime("%Y-%m-%d %H:%M:%S %z")
@@ -39,13 +41,13 @@ impl Display for Time {
 impl Time {
     /// Formats _time_ according to the directives in the given format string.
     ///
-    /// Can be used to implement [`Time#strftime`]
+    /// Can be used to implement [`Time#strftime`][ruby-time-strftime].
     ///
     /// # Panics
     ///
     /// Panics on every invocation. Functionality is not implemented.
     ///
-    /// [`Time#stftime`]: https://ruby-doc.org/core-2.6.3/Time.html#method-i-strftime
+    /// [ruby-time-strftime]: https://ruby-doc.org/core-2.6.3/Time.html#method-i-strftime
     #[inline]
     #[must_use]
     pub fn strftime(_: Self, _format: &str) -> String {
@@ -60,13 +62,13 @@ impl Time {
     /// The ordering of the properties is important for the Ruby [`Time#to_a`]
     /// API.
     ///
-    /// Can be used to implement [`Time#to_a`]
+    /// Can be used to implement [`Time#to_a`].
     ///
     /// # Examples
     ///
     /// ```
     /// # use spinoso_time::tzrs::Time;
-    /// let now = Time::now();
+    /// let now = Time::now().unwrap();
     /// let to_array = now.to_array();
     /// assert_eq!(to_array.sec, now.second());
     /// assert_eq!(to_array.wday, now.day_of_week());

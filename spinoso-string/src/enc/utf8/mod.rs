@@ -6,6 +6,7 @@ use core::slice::SliceIndex;
 
 use bstr::{ByteSlice, ByteVec};
 
+use crate::chars::ConventionallyUtf8;
 use crate::codepoints::InvalidCodepointError;
 use crate::iter::{Bytes, IntoIter, Iter, IterMut};
 use crate::ord::OrdError;
@@ -18,6 +19,7 @@ mod io;
 
 pub use inspect::Inspect;
 
+#[repr(transparent)]
 #[allow(clippy::module_name_repetitions)]
 #[derive(Default, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Utf8String {
@@ -77,25 +79,25 @@ impl Utf8String {
     #[inline]
     #[must_use]
     pub fn iter(&self) -> Iter<'_> {
-        Iter(self.inner.iter())
+        Iter::from_slice(&self.inner)
     }
 
     #[inline]
     #[must_use]
     pub fn iter_mut(&mut self) -> IterMut<'_> {
-        IterMut(self.inner.iter_mut())
+        IterMut::from_mut_slice(&mut self.inner)
     }
 
     #[inline]
     #[must_use]
     pub fn bytes(&self) -> Bytes<'_> {
-        Bytes(self.inner.iter())
+        Bytes::from_slice(&self.inner)
     }
 
     #[inline]
     #[must_use]
     pub fn into_iter(self) -> IntoIter {
-        IntoIter(self.inner.into_iter())
+        IntoIter::from_vec(self.inner)
     }
 }
 
@@ -661,6 +663,22 @@ impl Utf8String {
     #[must_use]
     pub fn ends_with(&self, slice: &[u8]) -> bool {
         self.inner.ends_with(slice)
+    }
+
+    #[inline]
+    pub fn reverse(&mut self) {
+        if self.is_ascii() {
+            self.inner.reverse();
+            return;
+        }
+        // FIXME: this allocation can go away if `ConventionallyUtf8` impls
+        // `DoubleEndedIterator`.
+        let chars = ConventionallyUtf8::from(&self.inner[..]).collect::<Vec<_>>();
+        let mut replacement = Vec::with_capacity(self.inner.len());
+        for &bytes in chars.iter().rev() {
+            replacement.extend_from_slice(bytes);
+        }
+        self.inner = replacement;
     }
 }
 

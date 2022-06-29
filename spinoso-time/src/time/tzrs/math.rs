@@ -3,7 +3,7 @@ use core::time::Duration;
 
 use tz::datetime::DateTime;
 
-use crate::time::tzrs::Time;
+use super::Time;
 use crate::NANOS_IN_SECOND;
 
 impl Time {
@@ -16,7 +16,7 @@ impl Time {
     /// # Examples
     /// ```
     /// use spinoso_time::tzrs::Time;
-    /// let now = Time::local(2010, 3, 30, 5, 43, 25, 123456789);
+    /// let now = Time::local(2010, 3, 30, 5, 43, 25, 123456789).unwrap();
     /// let rounded = now.round(5);
     /// assert_eq!(now.utc_offset(), rounded.utc_offset());
     /// assert_eq!(123460000, rounded.nanoseconds());
@@ -29,20 +29,48 @@ impl Time {
     pub fn round(&self, digits: u32) -> Self {
         match digits {
             9..=u32::MAX => *self,
+            // Does integer truncation with round up at 5.
+            //
+            // ``console
+            // [3.1.2] > t = Time.at(Time.new(2010, 3, 30, 5, 43, 25).to_i, 123_456_789, :nsec)
+            // => 2010-03-30 05:43:25.123456789 -0700
+            // [3.1.2] > (0..9).each {|d| u = t.round(d); puts "#{d}: #{u.nsec}" }
+            // 0: 0
+            // 1: 100000000
+            // 2: 120000000
+            // 3: 123000000
+            // 4: 123500000
+            // 5: 123460000
+            // 6: 123457000
+            // 7: 123456800
+            // 8: 123456790
+            // 9: 123456789
+            // ```
             digits => {
                 let local_time_type = *self.inner.local_time_type();
                 let mut unix_time = self.to_int();
-                let nanos = f64::from(self.nanoseconds()) / f64::from(NANOS_IN_SECOND);
+                let nanos = self.nanoseconds();
 
-                let exponent_shift = f64::from(10_u32.pow(digits));
+                // `digits` is guaranteed to be at most `8` so these subtractions
+                // can never underflow.
+                let truncating_divisor = 10_u64.pow(9 - digits - 1);
+                let rounding_multiple = 10_u64.pow(9 - digits);
 
-                let rounded_nanos = (nanos * exponent_shift).round() / exponent_shift;
-                let mut new_nanos = (rounded_nanos * f64::from(NANOS_IN_SECOND)) as u32;
+                let truncated = u64::from(nanos) / truncating_divisor;
+                let mut new_nanos = if truncated % 10 >= 5 {
+                    ((truncated / 10) + 1) * rounding_multiple
+                } else {
+                    (truncated / 10) * rounding_multiple
+                }
+                .try_into()
+                .expect("new nanos are a truncated version of input which is in bounds for u32");
+
                 if new_nanos >= NANOS_IN_SECOND {
                     unix_time += 1;
                     new_nanos -= NANOS_IN_SECOND;
                 }
 
+                // Rounding should never cause an error generating a new time since it's always a truncation
                 let dt = DateTime::from_timespec_and_local(unix_time, new_nanos, local_time_type)
                     .expect("Could not round the datetime");
                 Self {
@@ -73,7 +101,7 @@ impl Add<Duration> for Time {
             nanoseconds -= NANOS_IN_SECOND;
         }
 
-        Self::Output::with_timespec_and_offset(seconds, nanoseconds, offset)
+        Self::Output::with_timespec_and_offset(seconds, nanoseconds, offset).unwrap()
     }
 }
 
@@ -191,7 +219,7 @@ impl Sub<Duration> for Time {
             nanoseconds + NANOS_IN_SECOND - duration_subsecs
         };
 
-        Self::Output::with_timespec_and_offset(seconds, nanoseconds, offset)
+        Self::Output::with_timespec_and_offset(seconds, nanoseconds, offset).unwrap()
     }
 }
 
@@ -282,12 +310,12 @@ mod tests {
 
     fn datetime() -> Time {
         // halfway through a second
-        Time::utc(2019, 4, 7, 23, 59, 59, 500_000_000)
+        Time::utc(2019, 4, 7, 23, 59, 59, 500_000_000).unwrap()
     }
 
     #[test]
     fn rounding() {
-        let dt = Time::utc(2010, 3, 30, 5, 43, 25, 123_456_789);
+        let dt = Time::utc(2010, 3, 30, 5, 43, 25, 123_456_789).unwrap();
         assert_eq!(0, dt.round(0).nanoseconds());
         assert_eq!(100_000_000, dt.round(1).nanoseconds());
         assert_eq!(120_000_000, dt.round(2).nanoseconds());
@@ -304,7 +332,7 @@ mod tests {
 
     #[test]
     fn rounding_rollup() {
-        let dt = Time::utc(1999, 12, 31, 23, 59, 59, 900_000_000);
+        let dt = Time::utc(1999, 12, 31, 23, 59, 59, 900_000_000).unwrap();
         let rounded = dt.round(0);
         let dt_unix = dt.to_int();
         let rounded_unix = rounded.to_int();
